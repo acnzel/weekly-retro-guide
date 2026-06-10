@@ -120,13 +120,26 @@
   </div>
   <div class="callout"><b>핵심 원칙:</b> 1번만 일어난 실수는 규칙이 되지 않습니다(잔소리 방지). <b>2번째</b> 반복됐을 때만 후보가 됩니다. 단, 돌이키기 힘든 치명적 실수는 1번만으로도 올립니다.</div>
 
+  <h2>어디서 써야 작동하나요? <span class="muted" style="font-size:14px">— 꼭 확인하세요</span></h2>
+  <p>이 시스템은 <b>Claude Code</b>에서 돌아갑니다. <b>Claude Desktop 앱</b>을 쓰는 분이라면 앱 안의 세 탭(Chat · Cowork · <b>Code</b>) 중 반드시
+  <b>Code 탭</b>을, 그리고 <b>"내 컴퓨터(Local)"</b> 환경으로 사용해야 합니다.</p>
+  <div class="card">
+    <table class="faq">
+      <tr><td>✅</td><td><b>Claude Desktop 앱 → Code 탭 (Local)</b><br><span class="muted">CLI와 똑같은 <code class="inl">~/.claude</code> 설정·스킬·훅을 공유하고 내 컴퓨터 파일에 접근합니다. <b>비개발자에게 추천</b> — 터미널 없이 GUI로 사용.</span></td></tr>
+      <tr><td>✅</td><td><b>터미널 Claude Code (CLI)</b><br><span class="muted">개발자·고급 사용자용. 위와 설정을 공유하므로 결과는 동일.</span></td></tr>
+      <tr><td>❌</td><td><b>Chat 탭(일반 대화)</b><br><span class="muted">Claude Code가 아닙니다. CLAUDE.md·스킬·훅·로컬 파일을 쓰지 않아 작동하지 않습니다.</span></td></tr>
+      <tr><td>❌</td><td><b>클라우드(Remote) 세션</b><br><span class="muted">Anthropic 서버에서 샌드박스로 돌아 <b>내 Obsidian 폴더를 못 봅니다.</b> 반드시 Local을 고르세요.</span></td></tr>
+      <tr><td>⏰</td><td><b>매주 자동 점검(스캔)</b><br><span class="muted">항상 작동 — 내 컴퓨터의 스케줄러가 돌리므로 Claude를 켜두지 않아도 됩니다.</span></td></tr>
+    </table>
+  </div>
+
   <hr class="sep">
 
   <h2>준비물</h2>
   <div class="card">
     <ul>
       <li><b>Obsidian</b> — 무료 메모 앱. 교훈 일지가 여기 쌓입니다.</li>
-      <li><b>Claude Code</b> — AI 비서(이 시스템의 엔진). 설치 + 로그인 필요.</li>
+      <li><b>Claude Code</b> — 이 시스템의 엔진. <b>Claude Desktop 앱의 Code 탭</b>(비개발자 추천) 또는 터미널 CLI 중 하나. 설치 + 로그인 필요.</li>
       <li class="only-mac"><b>Mac:</b> <code class="inl">python3</code> — 보통 내장. 없으면 설치 안내가 뜹니다.</li>
       <li class="only-win"><b>Windows:</b> 추가 설치 불필요 — PowerShell이 기본 내장입니다.</li>
     </ul>
@@ -152,17 +165,17 @@
 
     <div class="stepblock">
       <h3>Claude Code 설치 + 로그인</h3>
-      <p>공식 안내를 따라 설치하는 것이 가장 확실합니다 →
-      <a href="https://code.claude.com/docs" target="_blank" rel="noopener">code.claude.com/docs</a></p>
-      <div class="only-mac">
-        <p class="muted">터미널(Terminal 앱)에서 보통 아래 명령으로 설치합니다. 설치 후 <code class="inl">claude</code> 를 실행해 로그인하세요.</p>
-        <pre class="code">npm install -g @anthropic-ai/claude-code</pre>
-      </div>
-      <div class="only-win">
-        <p class="muted">PowerShell에서 보통 아래 명령으로 설치합니다. 설치 후 <code class="inl">claude</code> 를 실행해 로그인하세요.</p>
-        <pre class="code">npm install -g @anthropic-ai/claude-code</pre>
-      </div>
-      <div class="callout muted">※ 위 명령은 일반적인 방법이며, 버전에 따라 공식 설치 방법이 다를 수 있으니 위 공식 문서를 기준으로 하세요.</div>
+      <p><b>방법 A — Claude Desktop 앱</b> <span class="pill">비개발자 추천</span> <span class="muted">(터미널 없이 GUI로 사용)</span></p>
+      <ul>
+        <li><a href="https://code.claude.com/docs/en/desktop" target="_blank" rel="noopener">데스크탑 앱 다운로드</a> → 설치 → 로그인 → 상단의 <b>Code 탭</b> 클릭.</li>
+        <li class="only-win">Windows는 Code 탭을 처음 열기 전에 <a href="https://git-scm.com/downloads/win" target="_blank" rel="noopener">Git for Windows</a>가 필요합니다(앱이 안내해 줍니다). 설치 후 앱을 재시작하세요.</li>
+        <li>새 세션을 만들 때 <b>환경 = "내 컴퓨터(Local)"</b>, <b>프로젝트 폴더 = Obsidian 보관함 폴더</b>를 선택하세요. (Chat 탭·클라우드(Remote)는 작동 안 함 — 위 표 참고)</li>
+      </ul>
+      <p style="margin-top:14px"><b>방법 B — 터미널 CLI</b> <span class="muted">(개발자·고급 사용자)</span></p>
+      <pre class="code">npm install -g @anthropic-ai/claude-code</pre>
+      <p class="muted">설치 후 <code class="inl">claude</code> 를 실행해 로그인하세요.</p>
+      <div class="callout good">방법 A와 B는 <b>같은 설정(<code class="inl">~/.claude</code>)을 공유</b>합니다. 어느 쪽으로 설치하든 이 가이드의 나머지 단계는 완전히 동일하게 적용됩니다.</div>
+      <div class="callout muted">※ 설치 방법은 버전에 따라 달라질 수 있으니 <a href="https://code.claude.com/docs" target="_blank" rel="noopener">공식 문서</a>를 기준으로 하세요.</div>
     </div>
 
     <div class="stepblock">
@@ -178,6 +191,7 @@
         <div class="callout"><b>실행 방법:</b> 아래 <b>복사</b> → <b>PowerShell</b>을 열고 붙여넣은 뒤 Enter.
         <br>실행이 막히면 먼저 이 한 줄을 실행하세요: <code class="inl">Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned</code></div>
       </div>
+      <p class="muted">💡 <b>Claude Desktop 앱만 쓰는 분</b>도 괜찮아요 — Code 탭의 <b>통합 터미널</b>(보기 메뉴 또는 <code class="inl">Ctrl+`</code>)을 열어 여기에 붙여넣으면 별도 터미널 앱 없이 설치됩니다. <span class="only-win">Windows는 통합 터미널의 PowerShell에서 실행하세요.</span></p>
       
     <div class="filecard only-mac">
       <div class="fhead">
@@ -874,10 +888,11 @@ Write-Host '   이제 Claude Code로 일하면 교훈이 쌓이고, 금요일에
       <h3>이제 이렇게 씁니다</h3>
       <div class="card">
         <ul>
-          <li><b>평소:</b> Claude Code로 일하세요. 의미 있는 작업을 마치면 AI가 일지에 교훈을 자동 기록합니다. (원하면 <code class="inl">오늘 작업 debrief 정리해줘</code> 라고 직접 시켜도 됩니다.)</li>
-          <li><b>금요일 14:30:</b> 컴퓨터가 자동으로 반복 교훈을 모아 알림을 띄웁니다.</li>
-          <li><b>검토:</b> Claude Code를 열면 "리뷰 대기 후보가 있다"고 알려줍니다. <code class="inl">/weekly-retro</code> 를 실행해 후보를 보고 <b>승인/기각</b>만 하면, 승인한 교훈이 영구 규칙이 됩니다.</li>
+          <li><b>평소:</b> Claude의 <b>Code 탭(내 컴퓨터·Local)</b>에서 일하세요. 의미 있는 작업을 마치면 AI가 일지에 교훈을 자동 기록합니다. (원하면 <code class="inl">오늘 작업 debrief 정리해줘</code> 라고 직접 시켜도 됩니다.)</li>
+          <li><b>금요일 14:30:</b> 컴퓨터가 자동으로 반복 교훈을 모아 알림을 띄웁니다. (Claude를 켜두지 않아도 됩니다.)</li>
+          <li><b>검토:</b> Code 탭을 열면 "리뷰 대기 후보가 있다"고 알려줍니다. 입력창에 <code class="inl">/</code> 를 입력하고 <b>weekly-retro</b> 를 골라 실행 → 후보를 보고 <b>승인/기각</b>만 하면, 승인한 교훈이 영구 규칙이 됩니다.</li>
         </ul>
+        <div class="callout warn" style="margin-top:6px">⚠️ 작동 조건: 반드시 <b>Code 탭 + 내 컴퓨터(Local)</b>. Chat 탭이나 클라우드(Remote)에서는 일지 기록·<code class="inl">/weekly-retro</code>가 동작하지 않습니다.</div>
       </div>
     </div>
 
