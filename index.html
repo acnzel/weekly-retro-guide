@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>주간 리트로 설치 가이드 — AI와 일하며 같은 실수 반복 막기</title>
+<style>
+  :root {
+    --bg:#f6f7fb; --card:#ffffff; --ink:#1f2330; --mut:#6b7280; --line:#e6e8ef;
+    --accent:#5b54e8; --accent2:#8b5cf6; --good:#10b981; --warn:#f59e0b; --code:#1b1e2b;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",Roboto,sans-serif;
+    line-height:1.7; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:880px; margin:0 auto; padding:0 20px 120px; }
+  header.hero { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; padding:54px 20px 40px; }
+  header.hero .inner { max-width:880px; margin:0 auto; }
+  header.hero h1 { font-size:30px; margin:0 0 10px; letter-spacing:-.5px; }
+  header.hero p { font-size:17px; margin:0; opacity:.95; }
+  .osbar { position:sticky; top:0; z-index:50; background:rgba(255,255,255,.9); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line); padding:10px 0; }
+  .osbar .inner { max-width:880px; margin:0 auto; padding:0 20px; display:flex; align-items:center; gap:10px; }
+  .osbar .lbl { font-size:13px; color:var(--mut); margin-right:4px; }
+  .ostoggle button { border:1px solid var(--line); background:#fff; color:var(--ink); padding:7px 16px;
+    border-radius:999px; cursor:pointer; font-size:14px; font-weight:600; }
+  .ostoggle button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  h2 { font-size:22px; margin:42px 0 14px; letter-spacing:-.3px; }
+  h3 { font-size:17px; margin:26px 0 8px; }
+  p, li { font-size:15.5px; }
+  .lead { font-size:16.5px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin:16px 0;
+    box-shadow:0 1px 2px rgba(20,20,50,.04); }
+  .flow { display:grid; grid-template-columns:1fr; gap:10px; margin:16px 0; }
+  .flow .step { display:flex; gap:14px; align-items:flex-start; background:var(--card); border:1px solid var(--line);
+    border-radius:12px; padding:14px 16px; }
+  .flow .ic { font-size:24px; line-height:1; }
+  .flow .step b { display:block; font-size:15.5px; }
+  .flow .step span { color:var(--mut); font-size:14px; }
+  .steps { counter-reset:step; }
+  .stepblock { position:relative; padding-left:50px; margin:24px 0; }
+  .stepblock:before { counter-increment:step; content:counter(step); position:absolute; left:0; top:-2px;
+    width:34px; height:34px; border-radius:50%; background:var(--accent); color:#fff; font-weight:700;
+    display:flex; align-items:center; justify-content:center; }
+  .filecard { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px 16px; margin:16px 0; }
+  .fhead { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .fmeta { display:flex; align-items:center; gap:10px; }
+  .fname { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:14px; font-weight:700; }
+  .badge { font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:999px; }
+  .b-mac { background:#eef0ff; color:#4b46c9; }
+  .b-win { background:#e7f3ff; color:#1d6fd0; }
+  .b-both { background:#eafaf2; color:#0a8a55; }
+  .factions { display:flex; gap:8px; }
+  .btn { border:1px solid var(--line); background:#fff; color:var(--ink); padding:6px 14px; border-radius:8px;
+    cursor:pointer; font-size:13px; font-weight:600; }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+  .btn.copied { background:var(--good); color:#fff; border-color:var(--good); }
+  .fdesc { color:var(--mut); font-size:13.5px; margin:8px 0 10px; }
+  pre.code { background:var(--code); color:#e6e6f0; border-radius:10px; padding:14px 16px; overflow:auto;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px; line-height:1.55;
+    max-height:340px; margin:0; }
+  code.inl { background:#eceefb; color:#3b367f; padding:1px 6px; border-radius:5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; }
+  .callout { border-left:4px solid var(--accent); background:#f3f3fe; padding:12px 16px; border-radius:0 10px 10px 0; margin:14px 0; }
+  .callout.warn { border-color:var(--warn); background:#fff8ec; }
+  .callout.good { border-color:var(--good); background:#eefaf4; }
+  details { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:6px 16px; margin:14px 0; }
+  summary { cursor:pointer; font-weight:700; padding:8px 0; font-size:16px; }
+  details[open] summary { border-bottom:1px solid var(--line); margin-bottom:10px; }
+  table.faq td { padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; font-size:14px; }
+  .pathex { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12.5px; background:#eef0f6;
+    padding:8px 12px; border-radius:8px; display:block; margin:6px 0; overflow:auto; }
+  .muted { color:var(--mut); font-size:13.5px; }
+  a { color:var(--accent); }
+  .pill { display:inline-block; background:#eef0ff; color:#4b46c9; font-weight:700; font-size:12px;
+    padding:2px 9px; border-radius:999px; }
+  hr.sep { border:none; border-top:1px solid var(--line); margin:34px 0; }
+</style>
+</head>
+<body data-os="mac">
+<header class="hero">
+  <div class="inner">
+    <h1>🧠 주간 리트로 설치 가이드</h1>
+    <p>AI(Claude Code)와 일하며 얻은 교훈을 자동으로 모아, 같은 실수를 두 번 반복하지 않게 만드는 시스템 — 비개발자용 따라하기.</p>
+  </div>
+</header>
+
+<div class="osbar">
+  <div class="inner">
+    <span class="lbl">내 컴퓨터:</span>
+    <div class="ostoggle">
+      <button id="btn-mac" class="active" onclick="setOS('mac')"> Mac</button>
+      <button id="btn-win" onclick="setOS('win')">⊞ Windows</button>
+    </div>
+    <span class="muted" id="oshint" style="margin-left:auto"></span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <h2>이게 뭐예요?</h2>
+  <p class="lead">똑똑한 비서가 당신의 <b>업무 일지</b>를 매주 금요일에 들춰보고,
+  <b>"이 실수 또 하셨네요 — 앞으로 규칙으로 정해둘까요?"</b> 하고 물어보는 것.
+  당신이 "네"라고 한 것만 영구 규칙이 되어, AI가 다음부터 그 실수를 알아서 피합니다.</p>
+  <div class="card">
+    <b>왜 좋을까?</b>
+    <ul>
+      <li><b>나에게</b> — 검색 가능한 '결정·교훈' 자산이 쌓입니다. "그때 왜 그렇게 정했더라?"를 일지에서 바로 찾습니다.</li>
+      <li><b>AI에게</b> — 같은 실수를 반복하지 않습니다. 매주 반복된 교훈만 골라 영구 규칙으로 올리니, AI가 점점 똑똑해집니다.</li>
+      <li><b>꼭 개발이 아니어도</b> — 문서 작성, 자료 정리, 분석, 기획 등 Claude Code로 하는 모든 업무에 적용됩니다.</li>
+    </ul>
+  </div>
+
+  <h2>어떻게 작동하나요?</h2>
+  <div class="flow">
+    <div class="step"><div class="ic">✍️</div><div><b>1. 기록</b><span>Claude Code가 일을 끝내면 '교훈'을 일지에 자동으로 적습니다 (작은 #태그와 함께).</span></div></div>
+    <div class="step"><div class="ic">🔍</div><div><b>2. 집계</b><span>매주 금요일 14:30, 컴퓨터가 자동으로 <b>2번 이상 반복된</b> 교훈을 모아 '리뷰 대기' 목록을 만듭니다.</span></div></div>
+    <div class="step"><div class="ic">✅</div><div><b>3. 승인</b><span>당신이 <code class="inl">/weekly-retro</code> 를 실행하면 후보를 보여주고, "이건 규칙으로" 라고 고르기만 하면 됩니다.</span></div></div>
+    <div class="step"><div class="ic">🧠</div><div><b>4. 적용</b><span>승인된 규칙을 AI가 매 작업마다 기억해서, 같은 실수를 다시 하지 않습니다.</span></div></div>
+  </div>
+  <div class="callout"><b>핵심 원칙:</b> 1번만 일어난 실수는 규칙이 되지 않습니다(잔소리 방지). <b>2번째</b> 반복됐을 때만 후보가 됩니다. 단, 돌이키기 힘든 치명적 실수는 1번만으로도 올립니다.</div>
+
+  <hr class="sep">
+
+  <h2>준비물</h2>
+  <div class="card">
+    <ul>
+      <li><b>Obsidian</b> — 무료 메모 앱. 교훈 일지가 여기 쌓입니다.</li>
+      <li><b>Claude Code</b> — AI 비서(이 시스템의 엔진). 설치 + 로그인 필요.</li>
+      <li class="only-mac"><b>Mac:</b> <code class="inl">python3</code> — 보통 내장. 없으면 설치 안내가 뜹니다.</li>
+      <li class="only-win"><b>Windows:</b> 추가 설치 불필요 — PowerShell이 기본 내장입니다.</li>
+    </ul>
+  </div>
+
+  <div class="steps">
+
+    <div class="stepblock">
+      <h3>Obsidian 설치 + 일지 폴더 만들기</h3>
+      <p><a href="https://obsidian.md" target="_blank" rel="noopener">obsidian.md</a> 에서 내려받아 설치하고, <b>보관함(Vault)</b>을 하나 만듭니다.
+      그 안에 <b>"Claude Logs"</b> 같은 폴더를 하나 만들고, <b>그 폴더의 전체 경로를 복사</b>해 두세요. 다음 단계에서 한 번 붙여넣습니다.</p>
+      <div class="only-mac">
+        <span class="muted">Mac 경로 예시:</span>
+        <span class="pathex">/Users/내이름/Documents/MyVault/Claude Logs</span>
+        <p class="muted">폴더에서 <b>option</b> 키를 누른 채 우클릭 → "경로 이름 복사"로 정확한 경로를 얻을 수 있어요.</p>
+      </div>
+      <div class="only-win">
+        <span class="muted">Windows 경로 예시:</span>
+        <span class="pathex">C:\Users\내이름\Documents\MyVault\Claude Logs</span>
+        <p class="muted">탐색기에서 폴더를 <b>Shift+우클릭</b> → "경로로 복사"로 정확한 경로를 얻을 수 있어요.</p>
+      </div>
+    </div>
+
+    <div class="stepblock">
+      <h3>Claude Code 설치 + 로그인</h3>
+      <p>공식 안내를 따라 설치하는 것이 가장 확실합니다 →
+      <a href="https://code.claude.com/docs" target="_blank" rel="noopener">code.claude.com/docs</a></p>
+      <div class="only-mac">
+        <p class="muted">터미널(Terminal 앱)에서 보통 아래 명령으로 설치합니다. 설치 후 <code class="inl">claude</code> 를 실행해 로그인하세요.</p>
+        <pre class="code">npm install -g @anthropic-ai/claude-code</pre>
+      </div>
+      <div class="only-win">
+        <p class="muted">PowerShell에서 보통 아래 명령으로 설치합니다. 설치 후 <code class="inl">claude</code> 를 실행해 로그인하세요.</p>
+        <pre class="code">npm install -g @anthropic-ai/claude-code</pre>
+      </div>
+      <div class="callout muted">※ 위 명령은 일반적인 방법이며, 버전에 따라 공식 설치 방법이 다를 수 있으니 위 공식 문서를 기준으로 하세요.</div>
+    </div>
+
+    <div class="stepblock">
+      <h3>설치 스크립트 실행 (자동 설치)</h3>
+      <p>아래 스크립트가 <b>모든 것을 한 번에 설치</b>합니다. <b>맨 위 한 줄(교훈 폴더 경로)만</b> 1단계에서 복사한 경로로 바꾼 뒤 실행하세요.</p>
+      <div class="only-mac">
+        <div class="callout"><b>실행 방법(둘 중 하나):</b>
+          <br>① 아래 <b>다운로드</b> → 받은 <code class="inl">.command</code> 파일을 더블클릭 (차단되면 우클릭 → "열기").
+          <br>② 또는 <b>복사</b> → 터미널에 붙여넣고 Enter.
+        </div>
+      </div>
+      <div class="only-win">
+        <div class="callout"><b>실행 방법:</b> 아래 <b>복사</b> → <b>PowerShell</b>을 열고 붙여넣은 뒤 Enter.
+        <br>실행이 막히면 먼저 이 한 줄을 실행하세요: <code class="inl">Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned</code></div>
+      </div>
+      
+    <div class="filecard only-mac">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">install-weekly-retro-mac.command</span><span class="badge b-mac">Mac · 원클릭</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('mac-installer', this)">복사</button>
+          <button class="btn" onclick="downloadFile('mac-installer','install-weekly-retro-mac.command')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">이 파일 하나가 모든 구성요소(스킬·스캔·훅·스케줄·CLAUDE.md 규약)를 자동 설치합니다. 맨 위 한 줄(교훈 폴더 경로)만 본인 것으로 바꾸세요.</p>
+      <pre class="code" id="code-mac-installer"></pre>
+      <script type="text/plain" id="src-mac-installer">#!/bin/bash
+# ============================================================
+#  주간 리트로 설치 프로그램 (Mac)
+#  비개발자용 — 터미널에 통째로 붙여넣거나, 이 파일을 더블클릭해서 실행하세요.
+# ============================================================
+set -euo pipefail
+
+# ▼▼▼▼▼ 여기 한 줄만 본인 폴더로 바꾸세요 ▼▼▼▼▼
+# Obsidian 보관함(vault) 안에서 '교훈 기록'이 쌓일 폴더 경로입니다.
+# 예) "$HOME/Documents/내보관함/Claude Logs"
+VAULT_DEBRIEF_DIR="$HOME/Documents/MyVault/Claude Logs"
+# ▲▲▲▲▲ 여기 한 줄만 본인 폴더로 바꾸세요 ▲▲▲▲▲
+
+# 자동 점검 시각 (1=월 … 5=금 … 7=일). 기본: 금요일 14:30
+RETRO_WEEKDAY=5
+RETRO_HOUR=14
+RETRO_MINUTE=30
+
+if [ ! -x /usr/bin/python3 ]; then
+  echo "⚠️  python3 가 필요합니다. 터미널에서 다음을 실행해 설치한 뒤 다시 시도하세요:"
+  echo "      xcode-select --install"
+  exit 1
+fi
+
+CLAUDE_DIR="$HOME/.claude"
+SKILLS_DIR="$CLAUDE_DIR/skills/weekly-retro"
+SCRIPTS_DIR="$CLAUDE_DIR/scripts"
+HOOKS_DIR="$CLAUDE_DIR/hooks"
+LOGS_DIR="$CLAUDE_DIR/logs"
+LA_DIR="$HOME/Library/LaunchAgents"
+CONFIG="$CLAUDE_DIR/weekly-retro.config"
+HOOK_SH="$HOOKS_DIR/weekly-retro-session-start.sh"
+SCAN_PY="$SCRIPTS_DIR/weekly-retro-scan.py"
+PLIST="$LA_DIR/com.user.weekly-retro.plist"
+
+echo "→ 폴더 준비..."
+mkdir -p "$SKILLS_DIR" "$SCRIPTS_DIR" "$HOOKS_DIR" "$LOGS_DIR" "$LA_DIR" "$VAULT_DEBRIEF_DIR"
+
+echo "→ 설정 파일 기록..."
+printf '%s\n' "$VAULT_DEBRIEF_DIR" > "$CONFIG"
+
+echo "→ 스캔 스크립트 설치..."
+cat > "$SCAN_PY" <<'WRS_PY'
+#!/usr/bin/env python3
+"""weekly-retro-scan (Mac) — 매주 정해진 시각에 launchd가 실행."""
+from __future__ import annotations
+import platform, re, subprocess
+from datetime import date, datetime
+from pathlib import Path
+
+CONFIG = Path.home() / ".claude" / "weekly-retro.config"
+WINDOW_DAYS = 90
+LESSON_RE = re.compile(r"#lesson/([^\s#]+)")
+GUARDRAIL_RE = re.compile(r"#guardrail/([^\s#]+)")
+MAJOR_RE = re.compile(r"#sev/major\b")
+
+def debrief_dir():
+    try:
+        line = CONFIG.read_text(encoding="utf-8").strip().splitlines()[0].strip()
+        return Path(line).expanduser()
+    except Exception:
+        return None
+
+def collect_lines(directory):
+    cutoff = datetime.now().timestamp() - WINDOW_DAYS * 86400
+    rows = []
+    for f in sorted(directory.glob("*-debrief.md")):
+        try:
+            if f.stat().st_mtime < cutoff:
+                continue
+            content = f.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for raw in content.splitlines():
+            if "#promoted" in raw:
+                continue
+            line = raw.strip()
+            is_major = bool(MAJOR_RE.search(line))
+            for cat in LESSON_RE.findall(line):
+                rows.append((cat, "lesson", is_major, f.name, line))
+            for cat in GUARDRAIL_RE.findall(line):
+                rows.append((cat, "guardrail", is_major, f.name, line))
+    return rows
+
+def build_candidates(rows):
+    by_cat = {}
+    for cat, kind, is_major, fname, line in rows:
+        if kind != "lesson":
+            continue
+        slot = by_cat.setdefault(cat, {"files": set(), "evidence": [], "major": False})
+        slot["files"].add(fname)
+        slot["evidence"].append((fname, line))
+        slot["major"] = slot["major"] or is_major
+    candidates = []
+    for cat, slot in by_cat.items():
+        recurring = len(slot["files"]) >= 2
+        if recurring or slot["major"]:
+            candidates.append({"category": cat, "count": len(slot["files"]),
+                               "major": slot["major"], "recurring": recurring,
+                               "evidence": slot["evidence"]})
+    candidates.sort(key=lambda c: (c["count"], c["major"]), reverse=True)
+    return candidates
+
+def open_guardrails(rows):
+    by_cat = {}
+    for cat, kind, _m, fname, line in rows:
+        if kind != "guardrail":
+            continue
+        by_cat.setdefault(cat, []).append((fname, line))
+    return by_cat
+
+def render_note(candidates, guardrails, today):
+    fm = "---\ntags:\n  - weekly-retro\ncreated: %s\n---\n\n" % today
+    lines = [f"# 주간 리트로 후보 — {today}\n"]
+    lines.append("> 자동 집계 결과입니다. Claude Code에서 `/weekly-retro` 를 실행해 "
+                 "건건이 승인/기각하세요. 승인한 것만 영구 규칙(CLAUDE.md)으로 올라갑니다.\n")
+    if not candidates:
+        lines.append("## 승격 후보\n")
+        lines.append("- 이번 주 재발(2회+) 또는 치명(#sev/major) 교훈 없음. 👍\n")
+    else:
+        lines.append(f"## 승격 후보 ({len(candidates)}건)\n")
+        for c in candidates:
+            badge = []
+            if c["recurring"]:
+                badge.append(f"재발 {c['count']}회")
+            if c["major"]:
+                badge.append("치명(major)")
+            lines.append(f"### #lesson/{c['category']} — {', '.join(badge)}")
+            for fname, text in c["evidence"]:
+                lines.append(f"\t- [{'-'.join(fname.split('-')[:3])}] {text}")
+            lines.append("")
+    if guardrails:
+        lines.append(f"## 아직 살아있는 가드레일 ({len(guardrails)}개 범주)\n")
+        for cat, ev in sorted(guardrails.items(), key=lambda kv: -len(kv[1])):
+            lines.append(f"### #guardrail/{cat} — {len(ev)}회")
+            for fname, text in ev:
+                lines.append(f"\t- [{'-'.join(fname.split('-')[:3])}] {text}")
+            lines.append("")
+    return fm + "\n".join(lines) + "\n"
+
+def notify(title, message):
+    try:
+        if platform.system() == "Darwin":
+            subprocess.run(["osascript", "-e",
+                f'display notification "{message}" with title "{title}"'],
+                check=False, timeout=10)
+    except Exception:
+        pass
+
+def main():
+    directory = debrief_dir()
+    if directory is None or not directory.is_dir():
+        return 0
+    today = date.today().isoformat()
+    rows = collect_lines(directory)
+    candidates = build_candidates(rows)
+    guardrails = open_guardrails(rows)
+    (directory / f"리뷰 대기 — 주간 리트로 {today}.md").write_text(
+        render_note(candidates, guardrails, today), encoding="utf-8")
+    n = len(candidates)
+    notify("주간 리트로", f"승격 후보 {n}건 대기 중 — /weekly-retro 로 검토하세요" if n
+           else "이번 주 승격 후보 없음 👍")
+    return 0
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+WRS_PY
+
+echo "→ 세션 시작 훅 설치..."
+cat > "$HOOK_SH" <<'WRS_SH'
+#!/bin/bash
+# SessionStart 훅: 최근 debrief 교훈/가드레일 주입 + 미처리 리뷰 노트 넛지
+CONFIG="$HOME/.claude/weekly-retro.config"
+[ -f "$CONFIG" ] || exit 0
+DIR="$(head -n1 "$CONFIG")"
+[ -d "$DIR" ] || exit 0
+DEBRIEFS=$(find "$DIR" -name "*-debrief.md" -mtime -14 2>/dev/null | sort -r | head -5)
+CONTENT=""
+while IFS= read -r FILE; do
+  [ -z "$FILE" ] && continue
+  DATE_STR=$(basename "$FILE" | cut -d'-' -f1-3)
+  MISTAKES=$(awk '/### 실수 & 교훈/{f=1;next} /^### /{f=0} f&&NF{print}' "$FILE" | head -5)
+  GUARDRAILS=$(awk '/### 다음 세션 주의사항/{f=1;next} /^### |^---/{f=0} f&&NF{print}' "$FILE" | head -5)
+  if [ -n "$MISTAKES" ] || [ -n "$GUARDRAILS" ]; then
+    CONTENT="$CONTENT\n#### $DATE_STR"
+    [ -n "$MISTAKES" ] && CONTENT="$CONTENT\n**실수 & 교훈**\n$MISTAKES"
+    [ -n "$GUARDRAILS" ] && CONTENT="$CONTENT\n**가드레일**\n$GUARDRAILS"
+    CONTENT="$CONTENT\n"
+  fi
+done <<< "$DEBRIEFS"
+if [ -n "$CONTENT" ]; then
+  echo "[PAST SESSION LESSONS]"
+  echo "최근 세션 교훈/가드레일 — 같은 실수 반복 금지:"
+  printf "%b\n" "$CONTENT"
+fi
+PENDING=$(find "$DIR" -name "리뷰 대기 — 주간 리트로 *.md" 2>/dev/null | sort -r | head -1)
+if [ -n "$PENDING" ] && ! grep -q "처리 완료" "$PENDING" 2>/dev/null; then
+  echo ""
+  echo "[WEEKLY RETRO PENDING] 미처리 주간 리트로 후보가 있습니다: $(basename "$PENDING")"
+  echo "→ 사용자에게 /weekly-retro 실행을 제안할 것."
+fi
+WRS_SH
+chmod +x "$HOOK_SH"
+
+echo "→ 스킬 설치..."
+cat > "$SKILLS_DIR/SKILL.md" <<'WRS_SKILL'
+---
+name: weekly-retro
+description: Use weekly (or when a "리뷰 대기 — 주간 리트로" note exists, or the user says "주간 리트로"/"weekly retro") to review recurring lessons from debrief logs and promote approved ones into the "반복 교훈" section of ~/.claude/CLAUDE.md. Detects lessons recurring in 2+ debriefs (or #sev/major once), presents an approval gate, and never writes a rule without explicit user approval.
+---
+
+# Weekly Retro — 승격 게이트
+
+debrief 로그에 쌓인 교훈을 영구 규칙으로 졸업시키는 반자동 게이트.
+
+## 경로
+- 교훈 폴더: `~/.claude/weekly-retro.config` 첫 줄에 적힌 경로
+- 리뷰 대기 노트: 그 폴더의 `리뷰 대기 — 주간 리트로 YYYY-MM-DD.md`
+- 영구 규칙 대상: `~/.claude/CLAUDE.md` 의 `## 반복 교훈 (Lessons)` 섹션
+
+## 절차
+1. 최근 `리뷰 대기 — 주간 리트로 *.md`(상단에 `처리 완료` 없는 것)를 읽어 후보를 가져온다. 없으면 폴더의 `*-debrief.md`에서 `#lesson/*`·`#guardrail/*`를 직접 집계한다(`#promoted` 줄 제외).
+2. 후보 선별: 같은 `#lesson/<범주>`가 서로 다른 debrief 2개 이상 → 재발 후보. `#sev/major`는 1회만으로도 후보. 이미 CLAUDE.md에 같은 취지 규칙이 있으면 제외(먼저 CLAUDE.md를 읽어 대조).
+3. 게이트: 후보를 표로 제시(범주/횟수/근거 원문). 각 후보를 사용자가 **승인/기각/수정**. **승인 없이는 절대 기록하지 않는다.**
+4. 승격(승인분만): `~/.claude/CLAUDE.md`의 `## 반복 교훈 (Lessons)` 섹션에 한 줄 규칙으로 추가. 원본 debrief의 해당 교훈 줄 끝에 ` #promoted`를 붙여 재카운트 방지.
+5. 미해결 가드레일(`#guardrail/*` 중 `#promoted` 안 된 것)을 "아직 살아있는 주의사항"으로 정리해 보여준다.
+6. 처리한 리뷰 노트 상단에 `> 처리 완료 YYYY-MM-DD`를 적는다(삭제하지 않음). 결과 요약 보고.
+
+## 원칙
+- 2회째 발생에만 규칙화(1회성 교훈으로 CLAUDE.md 오염 금지). 단 `#sev/major`는 예외.
+- 게이트는 사람이 통제한다. 자동 기록 없음.
+WRS_SKILL
+
+echo "→ CLAUDE.md 규약 추가..."
+touch "$CLAUDE_DIR/CLAUDE.md"
+if ! grep -qF "weekly-retro:debrief-convention" "$CLAUDE_DIR/CLAUDE.md" 2>/dev/null; then
+cat >> "$CLAUDE_DIR/CLAUDE.md" <<'WRS_MD'
+
+<!-- weekly-retro:debrief-convention -->
+## 작업 debrief 자동 기록 (주간 리트로 연동)
+
+의미 있는 작업(문서 작성, 자료 정리, 분석, 조사, 기능 구현, 버그 수정 등)을 끝내면,
+교훈 폴더에 `YYYY-MM-DD-debrief.md` 파일을 Write로 작성한다(이미 있으면 섹션 추가).
+교훈 폴더 경로는 `~/.claude/weekly-retro.config` 첫 줄에 있다.
+
+### 각 작업 섹션 형식
+```markdown
+## HH:MM — 작업명
+
+### 무엇을 했나
+- (한 일 요약)
+
+### 핵심 의사결정
+- [결정] → [이유]
+
+### 실수 & 교훈
+- [실수] → [올바른 접근] #lesson/<범주> #sev/major|minor
+
+### 다음 세션 주의사항
+- [다음에 먼저 확인할 가드레일] #guardrail/<범주>
+```
+
+- 범주는 짧은 영문 키워드(kebab-case, 예: `wrong-folder`, `double-booking`). **기존 범주를 먼저 확인해 같은 사건이면 재사용**한다(재발 카운트 전제).
+- 심각도: 치명적(돌이키기 힘든 손실/사고)은 `#sev/major`(1회만으로도 승격 후보), 그 외 `#sev/minor`.
+- 영구 규칙으로 승격된 교훈에는 `/weekly-retro`가 원본 줄에 `#promoted`를 붙인다. 수동으로 건드리지 말 것.
+
+## 반복 교훈 (Lessons)
+<!-- /weekly-retro 가 승인한 반복 교훈이 여기에 누적됩니다. 매 세션 자동으로 읽힙니다. -->
+WRS_MD
+fi
+
+echo "→ Claude Code 훅(settings.json) 연결..."
+/usr/bin/python3 - "$HOOK_SH" <<'WRS_MERGE'
+import json, sys
+from pathlib import Path
+cmd = sys.argv[1]
+p = Path.home() / ".claude" / "settings.json"
+data = {}
+if p.exists():
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        data = {}
+hooks = data.setdefault("hooks", {})
+ss = hooks.setdefault("SessionStart", [])
+present = any(h.get("command") == cmd for b in ss for h in b.get("hooks", []))
+if not present:
+    ss.append({"hooks": [{"type": "command", "command": cmd, "timeout": 5}]})
+p.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+print("   settings.json 업데이트 완료")
+WRS_MERGE
+
+if [ "${WR_SKIP_SCHEDULE:-0}" != "1" ]; then
+echo "→ 자동 점검 스케줄 등록 (launchd)..."
+cat > "$PLIST" <<PLIST_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.user.weekly-retro</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/bin/python3</string>
+		<string>$SCAN_PY</string>
+	</array>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Weekday</key>
+		<integer>$RETRO_WEEKDAY</integer>
+		<key>Hour</key>
+		<integer>$RETRO_HOUR</integer>
+		<key>Minute</key>
+		<integer>$RETRO_MINUTE</integer>
+	</dict>
+	<key>StandardOutPath</key>
+	<string>$LOGS_DIR/weekly-retro.out.log</string>
+	<key>StandardErrorPath</key>
+	<string>$LOGS_DIR/weekly-retro.err.log</string>
+	<key>RunAtLoad</key>
+	<false/>
+</dict>
+</plist>
+PLIST_EOF
+launchctl bootout "gui/$(id -u)/com.user.weekly-retro" 2>/dev/null || true
+launchctl bootstrap "gui/$(id -u)" "$PLIST"
+fi
+
+echo "→ 설치 검증 (스캔 1회 실행)..."
+/usr/bin/python3 "$SCAN_PY" || true
+
+echo ""
+echo "✅ 설치 완료!"
+echo "   교훈 폴더 : $VAULT_DEBRIEF_DIR"
+echo "   자동 점검 : 매주 (요일 $RETRO_WEEKDAY) ${RETRO_HOUR}:$(printf '%02d' "$RETRO_MINUTE")"
+echo "   이제 Claude Code로 일하면 교훈이 쌓이고, 금요일에 자동 점검됩니다."
+</script>
+    </div>
+    <div class="filecard only-win">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">install-weekly-retro-windows.ps1</span><span class="badge b-win">Windows · 원클릭</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('win-installer', this)">복사</button>
+          <button class="btn" onclick="downloadFile('win-installer','install-weekly-retro-windows.ps1')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">이 스크립트 하나가 모든 구성요소를 자동 설치합니다. 맨 위 한 줄($VaultDebriefDir)만 본인 폴더로 바꾸세요.</p>
+      <pre class="code" id="code-win-installer"></pre>
+      <script type="text/plain" id="src-win-installer"># ============================================================
+#  주간 리트로 설치 프로그램 (Windows / PowerShell)
+#  비개발자용 — PowerShell 창에 통째로 붙여넣고 Enter 하세요.
+#  (실행이 막히면 먼저 아래 한 줄 실행:
+#     Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned )
+# ============================================================
+
+# ▼▼▼▼▼ 여기 한 줄만 본인 폴더로 바꾸세요 ▼▼▼▼▼
+# Obsidian 보관함(vault) 안에서 '교훈 기록'이 쌓일 폴더 경로입니다.
+$VaultDebriefDir = "$env:USERPROFILE\Documents\MyVault\Claude Logs"
+# ▲▲▲▲▲ 여기 한 줄만 본인 폴더로 바꾸세요 ▲▲▲▲▲
+
+# 자동 점검 시각. 기본: 금요일 14:30
+$RetroDay = 'Friday'
+$RetroHour = 14
+$RetroMinute = 30
+
+$ErrorActionPreference = 'Stop'
+function Write-Utf8NoBom($path, $text) {
+    [System.IO.File]::WriteAllText($path, $text, (New-Object System.Text.UTF8Encoding($false)))
+}
+
+$claude    = Join-Path $env:USERPROFILE '.claude'
+$skillsDir = Join-Path $claude 'skills\weekly-retro'
+$scriptsDir= Join-Path $claude 'scripts'
+$hooksDir  = Join-Path $claude 'hooks'
+$config    = Join-Path $claude 'weekly-retro.config'
+$scanPath  = Join-Path $scriptsDir 'weekly-retro-scan.ps1'
+$hookPath  = Join-Path $hooksDir 'weekly-retro-session-start.ps1'
+$skillPath = Join-Path $skillsDir 'SKILL.md'
+$claudeMd  = Join-Path $claude 'CLAUDE.md'
+$settingsPath = Join-Path $claude 'settings.json'
+
+Write-Host '→ 폴더 준비...'
+foreach ($d in @($skillsDir, $scriptsDir, $hooksDir, $VaultDebriefDir)) {
+    if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
+}
+
+Write-Host '→ 설정 파일 기록...'
+Write-Utf8NoBom $config $VaultDebriefDir
+
+Write-Host '→ 스캔 스크립트 설치...'
+$scan = @'
+# weekly-retro-scan (Windows) — 작업 스케줄러가 매주 정해진 시각에 실행.
+$ErrorActionPreference = 'SilentlyContinue'
+$cfg = Join-Path $env:USERPROFILE '.claude\weekly-retro.config'
+if (-not (Test-Path $cfg)) { return }
+$dir = (Get-Content -LiteralPath $cfg -TotalCount 1).Trim()
+if ([string]::IsNullOrWhiteSpace($dir) -or -not (Test-Path -LiteralPath $dir)) { return }
+$cutoff = (Get-Date).AddDays(-90)
+$files = @(Get-ChildItem -LiteralPath $dir -Filter '*-debrief.md' -File |
+           Where-Object { $_.LastWriteTime -ge $cutoff } | Sort-Object Name)
+$lessons = @{}
+$guards  = @{}
+foreach ($f in $files) {
+    $lines = Get-Content -LiteralPath $f.FullName -Encoding UTF8
+    foreach ($raw in $lines) {
+        if ($raw -match '#promoted') { continue }
+        $isMajor = [regex]::IsMatch($raw, '#sev/major\b')
+        foreach ($m in [regex]::Matches($raw, '#lesson/([^\s#]+)')) {
+            $cat = $m.Groups[1].Value
+            if (-not $lessons.ContainsKey($cat)) {
+                $lessons[$cat] = @{
+                    Files    = New-Object 'System.Collections.Generic.HashSet[string]'
+                    Evidence = New-Object System.Collections.ArrayList
+                    Major    = $false
+                }
+            }
+            [void]$lessons[$cat].Files.Add($f.Name)
+            [void]$lessons[$cat].Evidence.Add(@($f.Name, $raw.Trim()))
+            if ($isMajor) { $lessons[$cat].Major = $true }
+        }
+        foreach ($m in [regex]::Matches($raw, '#guardrail/([^\s#]+)')) {
+            $cat = $m.Groups[1].Value
+            if (-not $guards.ContainsKey($cat)) { $guards[$cat] = New-Object System.Collections.ArrayList }
+            [void]$guards[$cat].Add(@($f.Name, $raw.Trim()))
+        }
+    }
+}
+$cands = @()
+foreach ($cat in $lessons.Keys) {
+    $slot = $lessons[$cat]
+    $recurring = $slot.Files.Count -ge 2
+    if ($recurring -or $slot.Major) {
+        $cands += [pscustomobject]@{
+            Category = $cat; Count = $slot.Files.Count
+            Major = $slot.Major; Recurring = $recurring; Evidence = $slot.Evidence
+        }
+    }
+}
+$cands = @($cands | Sort-Object @{Expression='Count';Descending=$true}, @{Expression='Major';Descending=$true})
+$today = (Get-Date).ToString('yyyy-MM-dd')
+$out = New-Object System.Collections.ArrayList
+[void]$out.Add('---')
+[void]$out.Add('tags:')
+[void]$out.Add('  - weekly-retro')
+[void]$out.Add("created: $today")
+[void]$out.Add('---')
+[void]$out.Add('')
+[void]$out.Add("# 주간 리트로 후보 — $today")
+[void]$out.Add('')
+[void]$out.Add('> 자동 집계 결과입니다. Claude Code에서 `/weekly-retro` 를 실행해 건건이 승인/기각하세요. 승인한 것만 영구 규칙(CLAUDE.md)으로 올라갑니다.')
+[void]$out.Add('')
+if ($cands.Count -eq 0) {
+    [void]$out.Add('## 승격 후보')
+    [void]$out.Add('')
+    [void]$out.Add('- 이번 주 재발(2회+) 또는 치명(#sev/major) 교훈 없음. 👍')
+} else {
+    [void]$out.Add("## 승격 후보 ($($cands.Count)건)")
+    [void]$out.Add('')
+    foreach ($c in $cands) {
+        $badge = @()
+        if ($c.Recurring) { $badge += "재발 $($c.Count)회" }
+        if ($c.Major)     { $badge += '치명(major)' }
+        [void]$out.Add("### #lesson/$($c.Category) — $($badge -join ', ')")
+        foreach ($e in $c.Evidence) {
+            $d = (($e[0] -split '-')[0..2] -join '-')
+            [void]$out.Add("`t- [$d] $($e[1])")
+        }
+        [void]$out.Add('')
+    }
+}
+if ($guards.Count -gt 0) {
+    [void]$out.Add("## 아직 살아있는 가드레일 ($($guards.Count)개 범주)")
+    [void]$out.Add('')
+    foreach ($cat in ($guards.Keys | Sort-Object { -$guards[$_].Count })) {
+        [void]$out.Add("### #guardrail/$cat — $($guards[$cat].Count)회")
+        foreach ($e in $guards[$cat]) {
+            $d = (($e[0] -split '-')[0..2] -join '-')
+            [void]$out.Add("`t- [$d] $($e[1])")
+        }
+        [void]$out.Add('')
+    }
+}
+$text = ($out -join "`r`n") + "`r`n"
+$notePath = Join-Path $dir "리뷰 대기 — 주간 리트로 $today.md"
+[System.IO.File]::WriteAllText($notePath, $text, (New-Object System.Text.UTF8Encoding($false)))
+try {
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+    $n = New-Object System.Windows.Forms.NotifyIcon
+    $n.Icon = [System.Drawing.SystemIcons]::Information
+    $n.Visible = $true
+    $msg = if ($cands.Count -gt 0) { "승격 후보 $($cands.Count)건 대기 중 — /weekly-retro 로 검토하세요" } else { '이번 주 승격 후보 없음' }
+    $n.ShowBalloonTip(8000, '주간 리트로', $msg, [System.Windows.Forms.ToolTipIcon]::Info)
+    Start-Sleep -Seconds 9
+    $n.Dispose()
+} catch {}
+'@
+Write-Utf8NoBom $scanPath $scan
+
+Write-Host '→ 세션 시작 훅 설치...'
+$hook = @'
+# weekly-retro-session-start (Windows) — Claude Code SessionStart 훅.
+$ErrorActionPreference = 'SilentlyContinue'
+try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
+$cfg = Join-Path $env:USERPROFILE '.claude\weekly-retro.config'
+if (-not (Test-Path $cfg)) { return }
+$dir = (Get-Content -LiteralPath $cfg -TotalCount 1).Trim()
+if (-not (Test-Path -LiteralPath $dir)) { return }
+$cut = (Get-Date).AddDays(-14)
+$debriefs = @(Get-ChildItem -LiteralPath $dir -Filter '*-debrief.md' -File |
+              Where-Object { $_.LastWriteTime -ge $cut } |
+              Sort-Object Name -Descending | Select-Object -First 5)
+$buf = New-Object System.Collections.ArrayList
+foreach ($f in $debriefs) {
+    $lines = Get-Content -LiteralPath $f.FullName -Encoding UTF8
+    $mist = @(); $guard = @(); $mode = ''
+    foreach ($ln in $lines) {
+        if ($ln -match '^###\s*실수')     { $mode = 'm'; continue }
+        if ($ln -match '^###\s*다음 세션') { $mode = 'g'; continue }
+        if (($ln -match '^### ') -or ($ln -match '^---')) { $mode = ''; continue }
+        if ($ln.Trim()) {
+            if ($mode -eq 'm') { $mist += $ln }
+            elseif ($mode -eq 'g') { $guard += $ln }
+        }
+    }
+    if ($mist.Count -or $guard.Count) {
+        $d = (($f.Name -split '-')[0..2] -join '-')
+        [void]$buf.Add("#### $d")
+        if ($mist.Count)  { [void]$buf.Add('**실수 & 교훈**'); ($mist | Select-Object -First 5) | ForEach-Object { [void]$buf.Add($_) } }
+        if ($guard.Count) { [void]$buf.Add('**가드레일**');   ($guard | Select-Object -First 5) | ForEach-Object { [void]$buf.Add($_) } }
+        [void]$buf.Add('')
+    }
+}
+if ($buf.Count) {
+    Write-Output '[PAST SESSION LESSONS]'
+    Write-Output '최근 세션 교훈/가드레일 — 같은 실수 반복 금지:'
+    $buf | ForEach-Object { Write-Output $_ }
+}
+$pending = @(Get-ChildItem -LiteralPath $dir -Filter '리뷰 대기 — 주간 리트로 *.md' -File |
+             Sort-Object Name -Descending | Select-Object -First 1)
+if ($pending.Count -gt 0) {
+    $content = Get-Content -LiteralPath $pending[0].FullName -Raw -Encoding UTF8
+    if ($content -notmatch '처리 완료') {
+        Write-Output ''
+        Write-Output "[WEEKLY RETRO PENDING] 미처리 주간 리트로 후보가 있습니다: $($pending[0].Name)"
+        Write-Output '→ 사용자에게 /weekly-retro 실행을 제안할 것.'
+    }
+}
+'@
+Write-Utf8NoBom $hookPath $hook
+
+Write-Host '→ 스킬 설치...'
+$skill = @'
+---
+name: weekly-retro
+description: Use weekly (or when a "리뷰 대기 — 주간 리트로" note exists, or the user says "주간 리트로"/"weekly retro") to review recurring lessons from debrief logs and promote approved ones into the "반복 교훈" section of the user CLAUDE.md. Detects lessons recurring in 2+ debriefs (or #sev/major once), presents an approval gate, and never writes a rule without explicit user approval.
+---
+
+# Weekly Retro — 승격 게이트
+
+debrief 로그에 쌓인 교훈을 영구 규칙으로 졸업시키는 반자동 게이트.
+
+## 경로
+- 교훈 폴더: `~/.claude/weekly-retro.config`(Windows: `%USERPROFILE%\.claude\weekly-retro.config`) 첫 줄 경로
+- 리뷰 대기 노트: 그 폴더의 `리뷰 대기 — 주간 리트로 YYYY-MM-DD.md`
+- 영구 규칙 대상: 사용자 `CLAUDE.md` 의 `## 반복 교훈 (Lessons)` 섹션
+
+## 절차
+1. 최근 `리뷰 대기 — 주간 리트로 *.md`(상단에 `처리 완료` 없는 것)를 읽어 후보를 가져온다. 없으면 폴더의 `*-debrief.md`에서 `#lesson/*`·`#guardrail/*`를 직접 집계한다(`#promoted` 줄 제외).
+2. 후보 선별: 같은 `#lesson/<범주>`가 서로 다른 debrief 2개 이상 → 재발 후보. `#sev/major`는 1회만으로도 후보. 이미 CLAUDE.md에 같은 취지 규칙이 있으면 제외(먼저 CLAUDE.md를 읽어 대조).
+3. 게이트: 후보를 표로 제시(범주/횟수/근거 원문). 각 후보를 사용자가 승인/기각/수정. 승인 없이는 절대 기록하지 않는다.
+4. 승격(승인분만): 사용자 `CLAUDE.md`의 `## 반복 교훈 (Lessons)` 섹션에 한 줄 규칙으로 추가. 원본 debrief의 해당 교훈 줄 끝에 ` #promoted`를 붙여 재카운트 방지.
+5. 미해결 가드레일(`#guardrail/*` 중 `#promoted` 안 된 것)을 "아직 살아있는 주의사항"으로 정리해 보여준다.
+6. 처리한 리뷰 노트 상단에 `> 처리 완료 YYYY-MM-DD`를 적는다(삭제하지 않음). 결과 요약 보고.
+
+## 원칙
+- 2회째 발생에만 규칙화(1회성 교훈으로 CLAUDE.md 오염 금지). 단 `#sev/major`는 예외.
+- 게이트는 사람이 통제한다. 자동 기록 없음.
+'@
+Write-Utf8NoBom $skillPath $skill
+
+Write-Host '→ CLAUDE.md 규약 추가...'
+$snippet = @'
+
+<!-- weekly-retro:debrief-convention -->
+## 작업 debrief 자동 기록 (주간 리트로 연동)
+
+의미 있는 작업(문서 작성, 자료 정리, 분석, 조사, 기능 구현, 버그 수정 등)을 끝내면,
+교훈 폴더에 `YYYY-MM-DD-debrief.md` 파일을 Write로 작성한다(이미 있으면 섹션 추가).
+교훈 폴더 경로는 `~/.claude/weekly-retro.config`(Windows: `%USERPROFILE%\.claude\weekly-retro.config`) 첫 줄에 있다.
+
+### 각 작업 섹션 형식
+```markdown
+## HH:MM — 작업명
+
+### 무엇을 했나
+- (한 일 요약)
+
+### 핵심 의사결정
+- [결정] → [이유]
+
+### 실수 & 교훈
+- [실수] → [올바른 접근] #lesson/<범주> #sev/major|minor
+
+### 다음 세션 주의사항
+- [다음에 먼저 확인할 가드레일] #guardrail/<범주>
+```
+
+- 범주는 짧은 영문 키워드(kebab-case, 예: `wrong-folder`, `double-booking`). 기존 범주를 먼저 확인해 같은 사건이면 재사용한다(재발 카운트 전제).
+- 심각도: 치명적(돌이키기 힘든 손실/사고)은 `#sev/major`(1회만으로도 승격 후보), 그 외 `#sev/minor`.
+- 영구 규칙으로 승격된 교훈에는 `/weekly-retro`가 원본 줄에 `#promoted`를 붙인다. 수동으로 건드리지 말 것.
+
+## 반복 교훈 (Lessons)
+<!-- /weekly-retro 가 승인한 반복 교훈이 여기에 누적됩니다. 매 세션 자동으로 읽힙니다. -->
+'@
+$existing = ''
+if (Test-Path $claudeMd) { $existing = [System.IO.File]::ReadAllText($claudeMd) }
+if ($existing -notmatch 'weekly-retro:debrief-convention') {
+    Write-Utf8NoBom $claudeMd ($existing + $snippet)
+}
+
+Write-Host '→ Claude Code 훅(settings.json) 연결...'
+$hookCmd = "powershell -NoProfile -ExecutionPolicy Bypass -File `"$hookPath`""
+$json = $null
+if (Test-Path $settingsPath) {
+    try { $json = Get-Content -LiteralPath $settingsPath -Raw -Encoding UTF8 | ConvertFrom-Json } catch { $json = $null }
+}
+if ($null -eq $json) { $json = [pscustomobject]@{} }
+if (-not ($json.PSObject.Properties.Name -contains 'hooks')) {
+    $json | Add-Member -NotePropertyName hooks -NotePropertyValue ([pscustomobject]@{})
+}
+if (-not ($json.hooks.PSObject.Properties.Name -contains 'SessionStart')) {
+    $json.hooks | Add-Member -NotePropertyName SessionStart -NotePropertyValue @()
+}
+$exists = $false
+foreach ($b in @($json.hooks.SessionStart)) {
+    foreach ($h in @($b.hooks)) { if ($h.command -eq $hookCmd) { $exists = $true } }
+}
+if (-not $exists) {
+    $entry = [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $hookCmd; timeout = 5 }) }
+    $json.hooks.SessionStart = @($json.hooks.SessionStart) + $entry
+}
+Write-Utf8NoBom $settingsPath ($json | ConvertTo-Json -Depth 20)
+
+Write-Host '→ 자동 점검 스케줄 등록 (작업 스케줄러)...'
+try {
+    $action  = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$scanPath`""
+    $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek $RetroDay -At (Get-Date -Hour $RetroHour -Minute $RetroMinute -Second 0)
+    $set     = New-ScheduledTaskSettingsSet -StartWhenAvailable
+    Register-ScheduledTask -TaskName 'WeeklyRetro' -Action $action -Trigger $trigger -Settings $set -Description '주간 리트로 자동 점검' -Force | Out-Null
+    Write-Host '   작업 스케줄러 등록 완료'
+} catch {
+    Write-Warning "작업 스케줄러 등록 실패: $($_.Exception.Message)"
+    Write-Host '   → 관리자 권한 PowerShell에서 다시 실행하거나, 가이드의 FAQ를 참고하세요.'
+}
+
+Write-Host '→ 설치 검증 (스캔 1회 실행)...'
+try { & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scanPath } catch {}
+
+Write-Host ''
+Write-Host '✅ 설치 완료!'
+Write-Host "   교훈 폴더 : $VaultDebriefDir"
+Write-Host "   자동 점검 : 매주 $RetroDay ${RetroHour}:$('{0:D2}' -f $RetroMinute)"
+Write-Host '   이제 Claude Code로 일하면 교훈이 쌓이고, 금요일에 자동 점검됩니다.'
+</script>
+    </div>
+    </div>
+
+    <div class="stepblock">
+      <h3>설치 확인</h3>
+      <div class="only-mac">
+        <p>터미널에서 아래를 실행해 스케줄이 등록됐는지 확인합니다(숫자/이름이 보이면 성공):</p>
+        <pre class="code">launchctl list | grep weekly-retro</pre>
+      </div>
+      <div class="only-win">
+        <p>PowerShell에서 아래를 실행해 작업이 등록됐는지 확인합니다(상태가 보이면 성공):</p>
+        <pre class="code">Get-ScheduledTask -TaskName WeeklyRetro</pre>
+      </div>
+      <p>그리고 1단계에서 만든 <b>교훈 폴더</b> 안에 <code class="inl">리뷰 대기 — 주간 리트로 (날짜).md</code> 파일이 생겼다면 정상 작동입니다. 👍</p>
+    </div>
+
+    <div class="stepblock">
+      <h3>이제 이렇게 씁니다</h3>
+      <div class="card">
+        <ul>
+          <li><b>평소:</b> Claude Code로 일하세요. 의미 있는 작업을 마치면 AI가 일지에 교훈을 자동 기록합니다. (원하면 <code class="inl">오늘 작업 debrief 정리해줘</code> 라고 직접 시켜도 됩니다.)</li>
+          <li><b>금요일 14:30:</b> 컴퓨터가 자동으로 반복 교훈을 모아 알림을 띄웁니다.</li>
+          <li><b>검토:</b> Claude Code를 열면 "리뷰 대기 후보가 있다"고 알려줍니다. <code class="inl">/weekly-retro</code> 를 실행해 후보를 보고 <b>승인/기각</b>만 하면, 승인한 교훈이 영구 규칙이 됩니다.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="sep">
+
+  <h2>개별 파일 (수동 설치용)</h2>
+  <p class="muted">위 자동 설치 스크립트가 아래 파일들을 알아서 만들어 줍니다. 직접 살펴보거나 수동으로 설치하고 싶을 때만 사용하세요.
+  <span class="only-mac">아래는 <span class="pill">Mac</span> 및 <span class="pill">공통</span> 파일입니다.</span>
+  <span class="only-win">아래는 <span class="pill">Windows</span> 및 <span class="pill">공통</span> 파일입니다.</span></p>
+  
+    <div class="filecard only-mac">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">weekly-retro-scan.py</span><span class="badge b-mac">Mac</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('mac-scan', this)">복사</button>
+          <button class="btn" onclick="downloadFile('mac-scan','weekly-retro-scan.py')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">매주 자동 실행되는 집계 스크립트. 재발(2회+)·치명(major) 교훈을 모아 &#x27;리뷰 대기&#x27; 노트를 만듭니다.</p>
+      <pre class="code" id="code-mac-scan"></pre>
+      <script type="text/plain" id="src-mac-scan">#!/usr/bin/env python3
+"""weekly-retro-scan (Mac) — 매주 정해진 시각에 launchd가 실행.
+
+Obsidian 보관함의 debrief 노트에서 '재발(2회+)' 교훈과 '치명(#sev/major)' 교훈을 모아
+'리뷰 대기' 노트를 만든다. 결정론적(LLM/네트워크 없음). 판단/승격은 /weekly-retro 게이트에서.
+
+교훈 폴더 경로는 ~/.claude/weekly-retro.config 의 첫 줄에서 읽는다.
+"""
+from __future__ import annotations
+
+import platform
+import re
+import subprocess
+from datetime import date, datetime
+from pathlib import Path
+
+CONFIG = Path.home() / ".claude" / "weekly-retro.config"
+WINDOW_DAYS = 90  # 재발 감지 윈도우
+
+LESSON_RE = re.compile(r"#lesson/([^\s#]+)")
+GUARDRAIL_RE = re.compile(r"#guardrail/([^\s#]+)")
+MAJOR_RE = re.compile(r"#sev/major\b")
+
+
+def debrief_dir():
+    try:
+        line = CONFIG.read_text(encoding="utf-8").strip().splitlines()[0].strip()
+        return Path(line).expanduser()
+    except Exception:
+        return None
+
+
+def collect_lines(directory):
+    cutoff = datetime.now().timestamp() - WINDOW_DAYS * 86400
+    rows = []
+    for f in sorted(directory.glob("*-debrief.md")):
+        try:
+            if f.stat().st_mtime < cutoff:
+                continue
+            content = f.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for raw in content.splitlines():
+            if "#promoted" in raw:
+                continue
+            line = raw.strip()
+            is_major = bool(MAJOR_RE.search(line))
+            for cat in LESSON_RE.findall(line):
+                rows.append((cat, "lesson", is_major, f.name, line))
+            for cat in GUARDRAIL_RE.findall(line):
+                rows.append((cat, "guardrail", is_major, f.name, line))
+    return rows
+
+
+def build_candidates(rows):
+    by_cat = {}
+    for cat, kind, is_major, fname, line in rows:
+        if kind != "lesson":
+            continue
+        slot = by_cat.setdefault(cat, {"files": set(), "evidence": [], "major": False})
+        slot["files"].add(fname)
+        slot["evidence"].append((fname, line))
+        slot["major"] = slot["major"] or is_major
+    candidates = []
+    for cat, slot in by_cat.items():
+        recurring = len(slot["files"]) >= 2
+        if recurring or slot["major"]:
+            candidates.append({
+                "category": cat,
+                "count": len(slot["files"]),
+                "major": slot["major"],
+                "recurring": recurring,
+                "evidence": slot["evidence"],
+            })
+    candidates.sort(key=lambda c: (c["count"], c["major"]), reverse=True)
+    return candidates
+
+
+def open_guardrails(rows):
+    by_cat = {}
+    for cat, kind, _is_major, fname, line in rows:
+        if kind != "guardrail":
+            continue
+        by_cat.setdefault(cat, []).append((fname, line))
+    return by_cat
+
+
+def render_note(candidates, guardrails, today):
+    fm = (
+        "---\n"
+        "tags:\n"
+        "  - weekly-retro\n"
+        f"created: {today}\n"
+        "---\n\n"
+    )
+    lines = [f"# 주간 리트로 후보 — {today}\n"]
+    lines.append(
+        "> 자동 집계 결과입니다. Claude Code에서 `/weekly-retro` 를 실행해 "
+        "건건이 승인/기각하세요. 승인한 것만 영구 규칙(CLAUDE.md)으로 올라갑니다.\n"
+    )
+    if not candidates:
+        lines.append("## 승격 후보\n")
+        lines.append("- 이번 주 재발(2회+) 또는 치명(#sev/major) 교훈 없음. 👍\n")
+    else:
+        lines.append(f"## 승격 후보 ({len(candidates)}건)\n")
+        for c in candidates:
+            badge = []
+            if c["recurring"]:
+                badge.append(f"재발 {c['count']}회")
+            if c["major"]:
+                badge.append("치명(major)")
+            lines.append(f"### #lesson/{c['category']} — {', '.join(badge)}")
+            for fname, text in c["evidence"]:
+                date_str = "-".join(fname.split("-")[:3])
+                lines.append(f"\t- [{date_str}] {text}")
+            lines.append("")
+    if guardrails:
+        lines.append(f"## 아직 살아있는 가드레일 ({len(guardrails)}개 범주)\n")
+        for cat, ev in sorted(guardrails.items(), key=lambda kv: -len(kv[1])):
+            lines.append(f"### #guardrail/{cat} — {len(ev)}회")
+            for fname, text in ev:
+                date_str = "-".join(fname.split("-")[:3])
+                lines.append(f"\t- [{date_str}] {text}")
+            lines.append("")
+    return fm + "\n".join(lines) + "\n"
+
+
+def notify(title, message):
+    try:
+        if platform.system() == "Darwin":
+            subprocess.run(
+                ["osascript", "-e", f'display notification "{message}" with title "{title}"'],
+                check=False, timeout=10,
+            )
+    except Exception:
+        pass
+
+
+def main():
+    directory = debrief_dir()
+    if directory is None or not directory.is_dir():
+        return 0
+    today = date.today().isoformat()
+    rows = collect_lines(directory)
+    candidates = build_candidates(rows)
+    guardrails = open_guardrails(rows)
+    note = render_note(candidates, guardrails, today)
+    (directory / f"리뷰 대기 — 주간 리트로 {today}.md").write_text(note, encoding="utf-8")
+    n = len(candidates)
+    notify("주간 리트로", f"승격 후보 {n}건 대기 중 — /weekly-retro 로 검토하세요" if n
+           else "이번 주 승격 후보 없음 👍")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+</script>
+    </div>
+    <div class="filecard only-mac">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">weekly-retro-session-start.sh</span><span class="badge b-mac">Mac</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('mac-hook', this)">복사</button>
+          <button class="btn" onclick="downloadFile('mac-hook','weekly-retro-session-start.sh')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">세션 시작 훅. 최근 교훈을 AI에게 주입하고, 미처리 리뷰가 있으면 알려줍니다.</p>
+      <pre class="code" id="code-mac-hook"></pre>
+      <script type="text/plain" id="src-mac-hook">#!/bin/bash
+# weekly-retro-session-start (Mac) — Claude Code SessionStart 훅.
+# 최근 debrief 교훈/가드레일을 주입하고, 미처리 '리뷰 대기' 노트가 있으면 넛지한다.
+CONFIG="$HOME/.claude/weekly-retro.config"
+[ -f "$CONFIG" ] || exit 0
+DIR="$(head -n1 "$CONFIG")"
+[ -d "$DIR" ] || exit 0
+DEBRIEFS=$(find "$DIR" -name "*-debrief.md" -mtime -14 2>/dev/null | sort -r | head -5)
+CONTENT=""
+while IFS= read -r FILE; do
+  [ -z "$FILE" ] && continue
+  DATE_STR=$(basename "$FILE" | cut -d'-' -f1-3)
+  MISTAKES=$(awk '/### 실수 & 교훈/{f=1;next} /^### /{f=0} f&&NF{print}' "$FILE" | head -5)
+  GUARDRAILS=$(awk '/### 다음 세션 주의사항/{f=1;next} /^### |^---/{f=0} f&&NF{print}' "$FILE" | head -5)
+  if [ -n "$MISTAKES" ] || [ -n "$GUARDRAILS" ]; then
+    CONTENT="$CONTENT\n#### $DATE_STR"
+    [ -n "$MISTAKES" ] && CONTENT="$CONTENT\n**실수 & 교훈**\n$MISTAKES"
+    [ -n "$GUARDRAILS" ] && CONTENT="$CONTENT\n**가드레일**\n$GUARDRAILS"
+    CONTENT="$CONTENT\n"
+  fi
+done <<< "$DEBRIEFS"
+if [ -n "$CONTENT" ]; then
+  echo "[PAST SESSION LESSONS]"
+  echo "최근 세션 교훈/가드레일 — 같은 실수 반복 금지:"
+  printf "%b\n" "$CONTENT"
+fi
+PENDING=$(find "$DIR" -name "리뷰 대기 — 주간 리트로 *.md" 2>/dev/null | sort -r | head -1)
+if [ -n "$PENDING" ] && ! grep -q "처리 완료" "$PENDING" 2>/dev/null; then
+  echo ""
+  echo "[WEEKLY RETRO PENDING] 미처리 주간 리트로 후보가 있습니다: $(basename "$PENDING")"
+  echo "→ 사용자에게 /weekly-retro 실행을 제안할 것."
+fi
+</script>
+    </div>
+    <div class="filecard only-win">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">weekly-retro-scan.ps1</span><span class="badge b-win">Windows</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('win-scan', this)">복사</button>
+          <button class="btn" onclick="downloadFile('win-scan','weekly-retro-scan.ps1')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">매주 자동 실행되는 집계 스크립트(PowerShell).</p>
+      <pre class="code" id="code-win-scan"></pre>
+      <script type="text/plain" id="src-win-scan"># weekly-retro-scan (Windows) — 작업 스케줄러가 매주 정해진 시각에 실행.
+# Obsidian 보관함의 debrief 노트에서 '재발(2회+)' / '치명(#sev/major)' 교훈을 모아
+# '리뷰 대기' 노트를 만든다. 결정론적(LLM/네트워크 없음). 판단/승격은 /weekly-retro 게이트에서.
+$ErrorActionPreference = 'SilentlyContinue'
+
+$cfg = Join-Path $env:USERPROFILE '.claude\weekly-retro.config'
+if (-not (Test-Path $cfg)) { return }
+$dir = (Get-Content -LiteralPath $cfg -TotalCount 1).Trim()
+if ([string]::IsNullOrWhiteSpace($dir) -or -not (Test-Path -LiteralPath $dir)) { return }
+
+$cutoff = (Get-Date).AddDays(-90)
+$files = @(Get-ChildItem -LiteralPath $dir -Filter '*-debrief.md' -File |
+           Where-Object { $_.LastWriteTime -ge $cutoff } | Sort-Object Name)
+
+$lessons = @{}
+$guards  = @{}
+foreach ($f in $files) {
+    $lines = Get-Content -LiteralPath $f.FullName -Encoding UTF8
+    foreach ($raw in $lines) {
+        if ($raw -match '#promoted') { continue }
+        $isMajor = [regex]::IsMatch($raw, '#sev/major\b')
+        foreach ($m in [regex]::Matches($raw, '#lesson/([^\s#]+)')) {
+            $cat = $m.Groups[1].Value
+            if (-not $lessons.ContainsKey($cat)) {
+                $lessons[$cat] = @{
+                    Files    = New-Object 'System.Collections.Generic.HashSet[string]'
+                    Evidence = New-Object System.Collections.ArrayList
+                    Major    = $false
+                }
+            }
+            [void]$lessons[$cat].Files.Add($f.Name)
+            [void]$lessons[$cat].Evidence.Add(@($f.Name, $raw.Trim()))
+            if ($isMajor) { $lessons[$cat].Major = $true }
+        }
+        foreach ($m in [regex]::Matches($raw, '#guardrail/([^\s#]+)')) {
+            $cat = $m.Groups[1].Value
+            if (-not $guards.ContainsKey($cat)) { $guards[$cat] = New-Object System.Collections.ArrayList }
+            [void]$guards[$cat].Add(@($f.Name, $raw.Trim()))
+        }
+    }
+}
+
+$cands = @()
+foreach ($cat in $lessons.Keys) {
+    $slot = $lessons[$cat]
+    $recurring = $slot.Files.Count -ge 2
+    if ($recurring -or $slot.Major) {
+        $cands += [pscustomobject]@{
+            Category = $cat; Count = $slot.Files.Count
+            Major = $slot.Major; Recurring = $recurring; Evidence = $slot.Evidence
+        }
+    }
+}
+$cands = @($cands | Sort-Object @{Expression='Count';Descending=$true}, @{Expression='Major';Descending=$true})
+
+$today = (Get-Date).ToString('yyyy-MM-dd')
+$out = New-Object System.Collections.ArrayList
+[void]$out.Add('---')
+[void]$out.Add('tags:')
+[void]$out.Add('  - weekly-retro')
+[void]$out.Add("created: $today")
+[void]$out.Add('---')
+[void]$out.Add('')
+[void]$out.Add("# 주간 리트로 후보 — $today")
+[void]$out.Add('')
+[void]$out.Add('> 자동 집계 결과입니다. Claude Code에서 `/weekly-retro` 를 실행해 건건이 승인/기각하세요. 승인한 것만 영구 규칙(CLAUDE.md)으로 올라갑니다.')
+[void]$out.Add('')
+if ($cands.Count -eq 0) {
+    [void]$out.Add('## 승격 후보')
+    [void]$out.Add('')
+    [void]$out.Add('- 이번 주 재발(2회+) 또는 치명(#sev/major) 교훈 없음. 👍')
+} else {
+    [void]$out.Add("## 승격 후보 ($($cands.Count)건)")
+    [void]$out.Add('')
+    foreach ($c in $cands) {
+        $badge = @()
+        if ($c.Recurring) { $badge += "재발 $($c.Count)회" }
+        if ($c.Major)     { $badge += '치명(major)' }
+        [void]$out.Add("### #lesson/$($c.Category) — $($badge -join ', ')")
+        foreach ($e in $c.Evidence) {
+            $d = (($e[0] -split '-')[0..2] -join '-')
+            [void]$out.Add("`t- [$d] $($e[1])")
+        }
+        [void]$out.Add('')
+    }
+}
+if ($guards.Count -gt 0) {
+    [void]$out.Add("## 아직 살아있는 가드레일 ($($guards.Count)개 범주)")
+    [void]$out.Add('')
+    foreach ($cat in ($guards.Keys | Sort-Object { -$guards[$_].Count })) {
+        [void]$out.Add("### #guardrail/$cat — $($guards[$cat].Count)회")
+        foreach ($e in $guards[$cat]) {
+            $d = (($e[0] -split '-')[0..2] -join '-')
+            [void]$out.Add("`t- [$d] $($e[1])")
+        }
+        [void]$out.Add('')
+    }
+}
+$text = ($out -join "`r`n") + "`r`n"
+$notePath = Join-Path $dir "리뷰 대기 — 주간 리트로 $today.md"
+[System.IO.File]::WriteAllText($notePath, $text, (New-Object System.Text.UTF8Encoding($false)))
+
+# 알림 (best-effort; 안 떠도 세션 시작 시 넛지로 다시 알려줌)
+try {
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+    $n = New-Object System.Windows.Forms.NotifyIcon
+    $n.Icon = [System.Drawing.SystemIcons]::Information
+    $n.Visible = $true
+    $msg = if ($cands.Count -gt 0) { "승격 후보 $($cands.Count)건 대기 중 — /weekly-retro 로 검토하세요" } else { '이번 주 승격 후보 없음' }
+    $n.ShowBalloonTip(8000, '주간 리트로', $msg, [System.Windows.Forms.ToolTipIcon]::Info)
+    Start-Sleep -Seconds 9
+    $n.Dispose()
+} catch {}
+</script>
+    </div>
+    <div class="filecard only-win">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">weekly-retro-session-start.ps1</span><span class="badge b-win">Windows</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('win-hook', this)">복사</button>
+          <button class="btn" onclick="downloadFile('win-hook','weekly-retro-session-start.ps1')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">세션 시작 훅(PowerShell).</p>
+      <pre class="code" id="code-win-hook"></pre>
+      <script type="text/plain" id="src-win-hook"># weekly-retro-session-start (Windows) — Claude Code SessionStart 훅.
+# 최근 debrief 교훈/가드레일을 주입하고, 미처리 '리뷰 대기' 노트가 있으면 넛지한다.
+$ErrorActionPreference = 'SilentlyContinue'
+try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
+
+$cfg = Join-Path $env:USERPROFILE '.claude\weekly-retro.config'
+if (-not (Test-Path $cfg)) { return }
+$dir = (Get-Content -LiteralPath $cfg -TotalCount 1).Trim()
+if (-not (Test-Path -LiteralPath $dir)) { return }
+
+$cut = (Get-Date).AddDays(-14)
+$debriefs = @(Get-ChildItem -LiteralPath $dir -Filter '*-debrief.md' -File |
+              Where-Object { $_.LastWriteTime -ge $cut } |
+              Sort-Object Name -Descending | Select-Object -First 5)
+
+$buf = New-Object System.Collections.ArrayList
+foreach ($f in $debriefs) {
+    $lines = Get-Content -LiteralPath $f.FullName -Encoding UTF8
+    $mist = @(); $guard = @(); $mode = ''
+    foreach ($ln in $lines) {
+        if ($ln -match '^###\s*실수')        { $mode = 'm'; continue }
+        if ($ln -match '^###\s*다음 세션')    { $mode = 'g'; continue }
+        if (($ln -match '^### ') -or ($ln -match '^---')) { $mode = ''; continue }
+        if ($ln.Trim()) {
+            if ($mode -eq 'm') { $mist += $ln }
+            elseif ($mode -eq 'g') { $guard += $ln }
+        }
+    }
+    if ($mist.Count -or $guard.Count) {
+        $d = (($f.Name -split '-')[0..2] -join '-')
+        [void]$buf.Add("#### $d")
+        if ($mist.Count)  { [void]$buf.Add('**실수 & 교훈**'); ($mist | Select-Object -First 5) | ForEach-Object { [void]$buf.Add($_) } }
+        if ($guard.Count) { [void]$buf.Add('**가드레일**');   ($guard | Select-Object -First 5) | ForEach-Object { [void]$buf.Add($_) } }
+        [void]$buf.Add('')
+    }
+}
+if ($buf.Count) {
+    Write-Output '[PAST SESSION LESSONS]'
+    Write-Output '최근 세션 교훈/가드레일 — 같은 실수 반복 금지:'
+    $buf | ForEach-Object { Write-Output $_ }
+}
+
+$pending = @(Get-ChildItem -LiteralPath $dir -Filter '리뷰 대기 — 주간 리트로 *.md' -File |
+             Sort-Object Name -Descending | Select-Object -First 1)
+if ($pending.Count -gt 0) {
+    $content = Get-Content -LiteralPath $pending[0].FullName -Raw -Encoding UTF8
+    if ($content -notmatch '처리 완료') {
+        Write-Output ''
+        Write-Output "[WEEKLY RETRO PENDING] 미처리 주간 리트로 후보가 있습니다: $($pending[0].Name)"
+        Write-Output '→ 사용자에게 /weekly-retro 실행을 제안할 것.'
+    }
+}
+</script>
+    </div>
+    <div class="filecard only-both">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">SKILL.md</span><span class="badge b-both">공통</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('skill', this)">복사</button>
+          <button class="btn" onclick="downloadFile('skill','SKILL.md')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">/weekly-retro 게이트 스킬. ~/.claude/skills/weekly-retro/SKILL.md 에 둡니다.</p>
+      <pre class="code" id="code-skill"></pre>
+      <script type="text/plain" id="src-skill">---
+name: weekly-retro
+description: Use weekly (or when a "리뷰 대기 — 주간 리트로" note exists, or the user says "주간 리트로"/"weekly retro") to review recurring lessons from debrief logs and promote approved ones into the "반복 교훈" section of the user CLAUDE.md. Detects lessons recurring in 2+ debriefs (or #sev/major once), presents an approval gate, and never writes a rule without explicit user approval.
+---
+
+# Weekly Retro — 승격 게이트
+
+debrief 로그에 쌓인 교훈을 영구 규칙으로 졸업시키는 반자동 게이트.
+
+## 경로
+- 교훈 폴더: `~/.claude/weekly-retro.config`(Windows: `%USERPROFILE%\.claude\weekly-retro.config`) 첫 줄 경로
+- 리뷰 대기 노트: 그 폴더의 `리뷰 대기 — 주간 리트로 YYYY-MM-DD.md`
+- 영구 규칙 대상: 사용자 `CLAUDE.md` 의 `## 반복 교훈 (Lessons)` 섹션
+
+## 절차
+1. 최근 `리뷰 대기 — 주간 리트로 *.md`(상단에 `처리 완료` 없는 것)를 읽어 후보를 가져온다. 없으면 폴더의 `*-debrief.md`에서 `#lesson/*`·`#guardrail/*`를 직접 집계한다(`#promoted` 줄 제외).
+2. 후보 선별: 같은 `#lesson/<범주>`가 서로 다른 debrief 2개 이상 → 재발 후보. `#sev/major`는 1회만으로도 후보. 이미 CLAUDE.md에 같은 취지 규칙이 있으면 제외(먼저 CLAUDE.md를 읽어 대조).
+3. 게이트: 후보를 표로 제시(범주/횟수/근거 원문). 각 후보를 사용자가 승인/기각/수정. 승인 없이는 절대 기록하지 않는다.
+4. 승격(승인분만): 사용자 `CLAUDE.md`의 `## 반복 교훈 (Lessons)` 섹션에 한 줄 규칙으로 추가. 원본 debrief의 해당 교훈 줄 끝에 ` #promoted`를 붙여 재카운트 방지.
+5. 미해결 가드레일(`#guardrail/*` 중 `#promoted` 안 된 것)을 "아직 살아있는 주의사항"으로 정리해 보여준다.
+6. 처리한 리뷰 노트 상단에 `> 처리 완료 YYYY-MM-DD`를 적는다(삭제하지 않음). 결과 요약 보고.
+
+## 원칙
+- 2회째 발생에만 규칙화(1회성 교훈으로 CLAUDE.md 오염 금지). 단 `#sev/major`는 예외.
+- 게이트는 사람이 통제한다. 자동 기록 없음.
+</script>
+    </div>
+    <div class="filecard only-both">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">CLAUDE-snippet.md</span><span class="badge b-both">공통</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('claude-snippet', this)">복사</button>
+          <button class="btn" onclick="downloadFile('claude-snippet','CLAUDE-snippet.md')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">debrief 작성 규약 + 태그 규칙. 사용자 CLAUDE.md 맨 아래에 붙여넣습니다.</p>
+      <pre class="code" id="code-claude-snippet"></pre>
+      <script type="text/plain" id="src-claude-snippet"><!-- weekly-retro:debrief-convention -->
+## 작업 debrief 자동 기록 (주간 리트로 연동)
+
+의미 있는 작업(문서 작성, 자료 정리, 분석, 조사, 기능 구현, 버그 수정 등)을 끝내면,
+교훈 폴더에 `YYYY-MM-DD-debrief.md` 파일을 Write로 작성한다(이미 있으면 섹션 추가).
+교훈 폴더 경로는 `~/.claude/weekly-retro.config`(Windows: `%USERPROFILE%\.claude\weekly-retro.config`) 첫 줄에 있다.
+
+### 각 작업 섹션 형식
+```markdown
+## HH:MM — 작업명
+
+### 무엇을 했나
+- (한 일 요약)
+
+### 핵심 의사결정
+- [결정] → [이유]
+
+### 실수 & 교훈
+- [실수] → [올바른 접근] #lesson/<범주> #sev/major|minor
+
+### 다음 세션 주의사항
+- [다음에 먼저 확인할 가드레일] #guardrail/<범주>
+```
+
+- 범주는 짧은 영문 키워드(kebab-case, 예: `wrong-folder`, `double-booking`). 기존 범주를 먼저 확인해 같은 사건이면 재사용한다(재발 카운트 전제).
+- 심각도: 치명적(돌이키기 힘든 손실/사고)은 `#sev/major`(1회만으로도 승격 후보), 그 외 `#sev/minor`.
+- 영구 규칙으로 승격된 교훈에는 `/weekly-retro`가 원본 줄에 `#promoted`를 붙인다. 수동으로 건드리지 말 것.
+
+## 반복 교훈 (Lessons)
+<!-- /weekly-retro 가 승인한 반복 교훈이 여기에 누적됩니다. 매 세션 자동으로 읽힙니다. -->
+</script>
+    </div>
+
+  <hr class="sep">
+
+  <h2>문제 해결 (FAQ)</h2>
+  <details>
+    <summary>실행이 막혀요 / 권한 오류가 나요</summary>
+    <table class="faq">
+      <tr><td><b class="only-mac">Mac</b><b class="only-win">Windows</b></td>
+      <td><span class="only-mac"><code class="inl">.command</code> 더블클릭 시 "확인되지 않은 개발자" 경고가 뜨면, 파일을 <b>우클릭 → 열기</b>를 선택하세요. 한 번만 하면 됩니다.</span>
+      <span class="only-win">PowerShell에서 스크립트 실행이 차단되면 먼저 <code class="inl">Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned</code> 를 실행하세요. 작업 스케줄러 등록이 실패하면 <b>PowerShell을 "관리자 권한으로 실행"</b>한 뒤 다시 시도하세요.</span></td></tr>
+    </table>
+  </details>
+  <details class="only-mac">
+    <summary>Mac에서 "python3가 필요합니다"라고 나와요</summary>
+    <p>터미널에서 <code class="inl">xcode-select --install</code> 를 실행해 설치한 뒤, 설치 스크립트를 다시 실행하세요.</p>
+  </details>
+  <details>
+    <summary>알림(팝업)이 안 떠요</summary>
+    <p>알림은 보조 수단입니다. 안 떠도 괜찮습니다 — 다음에 Claude Code를 열면 "리뷰 대기 후보가 있다"고 자동으로 알려줍니다. <span class="only-mac">Mac은 시스템 설정 → 알림에서 권한을 확인할 수 있어요.</span></p>
+  </details>
+  <details>
+    <summary>실행 요일/시간을 바꾸고 싶어요</summary>
+    <p>설치 스크립트 맨 위의 시간 설정값을 바꾼 뒤 <b>다시 실행</b>하면 됩니다.
+    <span class="only-mac"><code class="inl">RETRO_WEEKDAY</code>(1=월…5=금…7=일), <code class="inl">RETRO_HOUR</code>, <code class="inl">RETRO_MINUTE</code></span>
+    <span class="only-win"><code class="inl">$RetroDay</code>(예: <code class="inl">'Monday'</code>), <code class="inl">$RetroHour</code>, <code class="inl">$RetroMinute</code></span> 값을 수정하세요.</p>
+  </details>
+  <details>
+    <summary>제거하려면?</summary>
+    <div class="only-mac"><pre class="code">launchctl bootout gui/$(id -u)/com.user.weekly-retro
+rm -f ~/Library/LaunchAgents/com.user.weekly-retro.plist
+rm -rf ~/.claude/skills/weekly-retro ~/.claude/scripts/weekly-retro-scan.py ~/.claude/hooks/weekly-retro-session-start.sh</pre></div>
+    <div class="only-win"><pre class="code">Unregister-ScheduledTask -TaskName WeeklyRetro -Confirm:$false
+Remove-Item "$env:USERPROFILE\.claude\skills\weekly-retro" -Recurse -Force
+Remove-Item "$env:USERPROFILE\.claude\scripts\weekly-retro-scan.ps1","$env:USERPROFILE\.claude\hooks\weekly-retro-session-start.ps1" -Force</pre></div>
+    <p class="muted">CLAUDE.md 와 settings.json 에 추가된 부분은 직접 지우면 됩니다(교훈 일지 파일은 그대로 보존됩니다).</p>
+  </details>
+  <details>
+    <summary>여러 사람이 쓰는데 안전한가요?</summary>
+    <p>네. 규칙으로 '승격'하는 건 <b>항상 당신이 직접 승인</b>해야만 일어납니다. 자동 점검은 후보를 '정리만' 할 뿐, 당신 허락 없이 규칙을 바꾸지 않습니다.</p>
+  </details>
+
+  <p class="muted" style="margin-top:40px">이 가이드는 self-contained HTML입니다. 그대로 다른 사람에게 보내도 모든 버튼이 동작합니다.</p>
+</div>
+
+<script>
+  function fillAll() {
+    document.querySelectorAll('pre.code[id^="code-"]').forEach(function(pre){
+      var id = pre.id.replace('code-','');
+      var src = document.getElementById('src-'+id);
+      if (src) pre.textContent = src.textContent.replace(/^\n/,'');
+    });
+  }
+  function srcText(id) {
+    var src = document.getElementById('src-'+id);
+    return src ? src.textContent.replace(/^\n/,'') : '';
+  }
+  function copyFile(id, btn) {
+    navigator.clipboard.writeText(srcText(id)).then(function(){
+      if(btn){ var t=btn.textContent; btn.textContent='복사됨!'; btn.classList.add('copied');
+        setTimeout(function(){ btn.textContent=t; btn.classList.remove('copied'); },1400); }
+    });
+  }
+  function downloadFile(id, filename) {
+    var blob = new Blob([srcText(id)], {type:'text/plain;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+    document.body.removeChild(a); setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+  }
+  function setOS(os) {
+    document.body.dataset.os = os;
+    document.getElementById('btn-mac').classList.toggle('active', os==='mac');
+    document.getElementById('btn-win').classList.toggle('active', os==='win');
+    document.getElementById('oshint').textContent = os==='mac' ? 'Mac 기준으로 표시 중' : 'Windows(PowerShell) 기준으로 표시 중';
+    try { localStorage.setItem('wr-os', os); } catch(e) {}
+  }
+  fillAll();
+  setOS((function(){ try { return localStorage.getItem('wr-os') || 'mac'; } catch(e) { return 'mac'; } })());
+</script>
+<style>
+  body[data-os="mac"] .only-win { display:none !important; }
+  body[data-os="win"] .only-mac { display:none !important; }
+</style>
+</body>
+</html>
