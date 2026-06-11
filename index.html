@@ -398,8 +398,10 @@ def main():
     rows = collect_lines(directory)
     candidates = build_candidates(rows)
     guardrails = open_guardrails(rows)
-    (directory / f"리뷰 대기 — 주간 리트로 {today}.md").write_text(
-        render_note(candidates, guardrails, today), encoding="utf-8")
+    note = render_note(candidates, guardrails, today)
+    if (directory.parent / "wiki").is_dir():
+        note += "\n## 함께 정비\n- 위키(wiki/)도 `/lint`로 같이 점검하세요 — 모순·끊긴 링크 정리. (주간 정비를 한 번에)\n"
+    (directory / f"리뷰 대기 — 주간 리트로 {today}.md").write_text(note, encoding="utf-8")
     n = len(candidates)
     notify("주간 리트로", f"승격 후보 {n}건 대기 중 — /weekly-retro 로 검토하세요" if n
            else "이번 주 승격 후보 없음 👍")
@@ -441,6 +443,7 @@ if [ -n "$PENDING" ] && ! grep -q "처리 완료" "$PENDING" 2>/dev/null; then
   echo ""
   echo "[WEEKLY RETRO PENDING] 미처리 주간 리트로 후보가 있습니다: $(basename "$PENDING")"
   echo "→ 사용자에게 /weekly-retro 실행을 제안할 것."
+  [ -d "$(dirname "$DIR")/wiki" ] && echo "   (주간 정비: 위키도 /lint 로 함께 점검하면 좋습니다 — 한 번에.)"
 fi
 WRS_SH
 chmod +x "$HOOK_SH"
@@ -753,6 +756,9 @@ if ($guards.Count -gt 0) {
     }
 }
 $text = ($out -join "`r`n") + "`r`n"
+if (Test-Path (Join-Path (Split-Path $dir -Parent) 'wiki')) {
+    $text += "## 함께 정비`r`n- 위키(wiki/)도 ``/lint``로 같이 점검하세요 — 모순·끊긴 링크 정리. (주간 정비를 한 번에)`r`n"
+}
 $notePath = Join-Path $dir "리뷰 대기 — 주간 리트로 $today.md"
 [System.IO.File]::WriteAllText($notePath, $text, (New-Object System.Text.UTF8Encoding($false)))
 try {
@@ -816,6 +822,7 @@ if ($pending.Count -gt 0) {
         Write-Output ''
         Write-Output "[WEEKLY RETRO PENDING] 미처리 주간 리트로 후보가 있습니다: $($pending[0].Name)"
         Write-Output '→ 사용자에게 /weekly-retro 실행을 제안할 것.'
+        if (Test-Path (Join-Path (Split-Path $dir -Parent) 'wiki')) { Write-Output '   (주간 정비: 위키도 /lint 로 함께 점검하면 좋습니다 — 한 번에.)' }
     }
 }
 '@
@@ -957,7 +964,7 @@ Write-Host '   이제 Claude Code로 일하면 교훈이 쌓이고, 금요일에
         <ul>
           <li><b>평소:</b> Claude의 <b>Code 탭(내 컴퓨터·Local)</b>에서 일하세요. 의미 있는 작업을 마치면 AI가 일지에 교훈을 자동 기록합니다. (원하면 <code class="inl">오늘 작업 debrief 정리해줘</code> 라고 직접 시켜도 됩니다.)</li>
           <li><b>금요일 14:30:</b> 컴퓨터가 자동으로 반복 교훈을 모아 알림을 띄웁니다. (Claude를 켜두지 않아도 됩니다.)</li>
-          <li><b>검토:</b> Code 탭을 열면 "리뷰 대기 후보가 있다"고 알려줍니다. 입력창에 <code class="inl">/</code> 를 입력하고 <b>weekly-retro</b> 를 골라 실행 → 후보를 보고 <b>승인/기각</b>만 하면, 승인한 교훈이 영구 규칙이 됩니다.</li>
+          <li><b>검토:</b> Code 탭을 열면 "리뷰 대기 후보가 있다"고 알려줍니다. 입력창에 <code class="inl">/</code> 를 입력하고 <b>weekly-retro</b> 를 골라 실행 → 후보를 보고 <b>승인/기각</b>만 하면, 승인한 교훈이 영구 규칙이 됩니다. <span class="muted">(<a href="./llm-wiki.html">LLM Wiki</a>도 설치했다면 이 날 <code class="inl">/lint</code>로 위키도 함께 점검하세요 — 주간 정비를 한 번에.)</span></li>
         </ul>
         <div class="callout warn" style="margin-top:6px">⚠️ 작동 조건: 반드시 <b>Code 탭 + 내 컴퓨터(Local)</b>. Chat 탭이나 클라우드(Remote)에서는 일지 기록·<code class="inl">/weekly-retro</code>가 동작하지 않습니다.</div>
       </div>
@@ -994,24 +1001,14 @@ Write-Host '   이제 Claude Code로 일하면 교훈이 쌓이고, 금요일에
       <p class="fdesc">매주 자동 실행되는 집계 스크립트. 재발(2회+)·치명(major) 교훈을 모아 &#x27;리뷰 대기&#x27; 노트를 만듭니다.</p>
       <pre class="code" id="code-mac-scan"></pre>
       <script type="text/plain" id="src-mac-scan">#!/usr/bin/env python3
-"""weekly-retro-scan (Mac) — 매주 정해진 시각에 launchd가 실행.
-
-Obsidian 보관함의 debrief 노트에서 '재발(2회+)' 교훈과 '치명(#sev/major)' 교훈을 모아
-'리뷰 대기' 노트를 만든다. 결정론적(LLM/네트워크 없음). 판단/승격은 /weekly-retro 게이트에서.
-
-교훈 폴더 경로는 ~/.claude/weekly-retro.config 의 첫 줄에서 읽는다.
-"""
+"""weekly-retro-scan (Mac) — 매주 정해진 시각에 launchd가 실행."""
 from __future__ import annotations
-
-import platform
-import re
-import subprocess
+import platform, re, subprocess
 from datetime import date, datetime
 from pathlib import Path
 
 CONFIG = Path.home() / ".claude" / "weekly-retro.config"
-WINDOW_DAYS = 90  # 재발 감지 윈도우
-
+WINDOW_DAYS = 90
 LESSON_RE = re.compile(r"#lesson/([^\s#]+)")
 GUARDRAIL_RE = re.compile(r"#guardrail/([^\s#]+)")
 MAJOR_RE = re.compile(r"#sev/major\b")
@@ -1075,7 +1072,7 @@ def build_candidates(rows):
 
 def open_guardrails(rows):
     by_cat = {}
-    for cat, kind, _is_major, fname, line in rows:
+    for cat, kind, _m, fname, line in rows:
         if kind != "guardrail":
             continue
         by_cat.setdefault(cat, []).append((fname, line))
@@ -1083,7 +1080,7 @@ def open_guardrails(rows):
 
 
 def render_note(candidates, guardrails, today):
-    fm = "---\n" "tags:\n" "  - weekly-retro\n" f"created: {today}\n" "---\n\n"
+    fm = "---\ntags:\n  - weekly-retro\ncreated: %s\n---\n\n" % today
     lines = [f"# 주간 리트로 후보 — {today}\n"]
     lines.append(
         "> 자동 집계 결과입니다. Claude Code에서 `/weekly-retro` 를 실행해 "
@@ -1102,16 +1099,14 @@ def render_note(candidates, guardrails, today):
                 badge.append("치명(major)")
             lines.append(f"### #lesson/{c['category']} — {', '.join(badge)}")
             for fname, text in c["evidence"]:
-                date_str = "-".join(fname.split("-")[:3])
-                lines.append(f"\t- [{date_str}] {text}")
+                lines.append(f"\t- [{'-'.join(fname.split('-')[:3])}] {text}")
             lines.append("")
     if guardrails:
         lines.append(f"## 아직 살아있는 가드레일 ({len(guardrails)}개 범주)\n")
         for cat, ev in sorted(guardrails.items(), key=lambda kv: -len(kv[1])):
             lines.append(f"### #guardrail/{cat} — {len(ev)}회")
             for fname, text in ev:
-                date_str = "-".join(fname.split("-")[:3])
-                lines.append(f"\t- [{date_str}] {text}")
+                lines.append(f"\t- [{'-'.join(fname.split('-')[:3])}] {text}")
             lines.append("")
     return fm + "\n".join(lines) + "\n"
 
@@ -1141,6 +1136,8 @@ def main():
     candidates = build_candidates(rows)
     guardrails = open_guardrails(rows)
     note = render_note(candidates, guardrails, today)
+    if (directory.parent / "wiki").is_dir():
+        note += "\n## 함께 정비\n- 위키(wiki/)도 `/lint`로 같이 점검하세요 — 모순·끊긴 링크 정리. (주간 정비를 한 번에)\n"
     (directory / f"리뷰 대기 — 주간 리트로 {today}.md").write_text(
         note, encoding="utf-8"
     )
@@ -1171,8 +1168,7 @@ if __name__ == "__main__":
       <p class="fdesc">세션 시작 훅. 최근 교훈을 AI에게 주입하고, 미처리 리뷰가 있으면 알려줍니다.</p>
       <pre class="code" id="code-mac-hook"></pre>
       <script type="text/plain" id="src-mac-hook">#!/bin/bash
-# weekly-retro-session-start (Mac) — Claude Code SessionStart 훅.
-# 최근 debrief 교훈/가드레일을 주입하고, 미처리 '리뷰 대기' 노트가 있으면 넛지한다.
+# SessionStart 훅: 최근 debrief 교훈/가드레일 주입 + 미처리 리뷰 노트 넛지
 CONFIG="$HOME/.claude/weekly-retro.config"
 [ -f "$CONFIG" ] || exit 0
 DIR="$(head -n1 "$CONFIG")"
@@ -1201,6 +1197,7 @@ if [ -n "$PENDING" ] && ! grep -q "처리 완료" "$PENDING" 2>/dev/null; then
   echo ""
   echo "[WEEKLY RETRO PENDING] 미처리 주간 리트로 후보가 있습니다: $(basename "$PENDING")"
   echo "→ 사용자에게 /weekly-retro 실행을 제안할 것."
+  [ -d "$(dirname "$DIR")/wiki" ] && echo "   (주간 정비: 위키도 /lint 로 함께 점검하면 좋습니다 — 한 번에.)"
 fi
 </script>
     </div>
@@ -1215,19 +1212,14 @@ fi
       <p class="fdesc">매주 자동 실행되는 집계 스크립트(PowerShell).</p>
       <pre class="code" id="code-win-scan"></pre>
       <script type="text/plain" id="src-win-scan"># weekly-retro-scan (Windows) — 작업 스케줄러가 매주 정해진 시각에 실행.
-# Obsidian 보관함의 debrief 노트에서 '재발(2회+)' / '치명(#sev/major)' 교훈을 모아
-# '리뷰 대기' 노트를 만든다. 결정론적(LLM/네트워크 없음). 판단/승격은 /weekly-retro 게이트에서.
 $ErrorActionPreference = 'SilentlyContinue'
-
 $cfg = Join-Path $env:USERPROFILE '.claude\weekly-retro.config'
 if (-not (Test-Path $cfg)) { return }
 $dir = (Get-Content -LiteralPath $cfg -TotalCount 1).Trim()
 if ([string]::IsNullOrWhiteSpace($dir) -or -not (Test-Path -LiteralPath $dir)) { return }
-
 $cutoff = (Get-Date).AddDays(-90)
 $files = @(Get-ChildItem -LiteralPath $dir -Filter '*-debrief.md' -File |
            Where-Object { $_.LastWriteTime -ge $cutoff } | Sort-Object Name)
-
 $lessons = @{}
 $guards  = @{}
 foreach ($f in $files) {
@@ -1255,7 +1247,6 @@ foreach ($f in $files) {
         }
     }
 }
-
 $cands = @()
 foreach ($cat in $lessons.Keys) {
     $slot = $lessons[$cat]
@@ -1268,7 +1259,6 @@ foreach ($cat in $lessons.Keys) {
     }
 }
 $cands = @($cands | Sort-Object @{Expression='Count';Descending=$true}, @{Expression='Major';Descending=$true})
-
 $today = (Get-Date).ToString('yyyy-MM-dd')
 $out = New-Object System.Collections.ArrayList
 [void]$out.Add('---')
@@ -1313,10 +1303,11 @@ if ($guards.Count -gt 0) {
     }
 }
 $text = ($out -join "`r`n") + "`r`n"
+if (Test-Path (Join-Path (Split-Path $dir -Parent) 'wiki')) {
+    $text += "## 함께 정비`r`n- 위키(wiki/)도 ``/lint``로 같이 점검하세요 — 모순·끊긴 링크 정리. (주간 정비를 한 번에)`r`n"
+}
 $notePath = Join-Path $dir "리뷰 대기 — 주간 리트로 $today.md"
 [System.IO.File]::WriteAllText($notePath, $text, (New-Object System.Text.UTF8Encoding($false)))
-
-# 알림 (best-effort; 안 떠도 세션 시작 시 넛지로 다시 알려줌)
 try {
     Add-Type -AssemblyName System.Windows.Forms
     Add-Type -AssemblyName System.Drawing
@@ -1341,27 +1332,23 @@ try {
       <p class="fdesc">세션 시작 훅(PowerShell).</p>
       <pre class="code" id="code-win-hook"></pre>
       <script type="text/plain" id="src-win-hook"># weekly-retro-session-start (Windows) — Claude Code SessionStart 훅.
-# 최근 debrief 교훈/가드레일을 주입하고, 미처리 '리뷰 대기' 노트가 있으면 넛지한다.
 $ErrorActionPreference = 'SilentlyContinue'
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
-
 $cfg = Join-Path $env:USERPROFILE '.claude\weekly-retro.config'
 if (-not (Test-Path $cfg)) { return }
 $dir = (Get-Content -LiteralPath $cfg -TotalCount 1).Trim()
 if (-not (Test-Path -LiteralPath $dir)) { return }
-
 $cut = (Get-Date).AddDays(-14)
 $debriefs = @(Get-ChildItem -LiteralPath $dir -Filter '*-debrief.md' -File |
               Where-Object { $_.LastWriteTime -ge $cut } |
               Sort-Object Name -Descending | Select-Object -First 5)
-
 $buf = New-Object System.Collections.ArrayList
 foreach ($f in $debriefs) {
     $lines = Get-Content -LiteralPath $f.FullName -Encoding UTF8
     $mist = @(); $guard = @(); $mode = ''
     foreach ($ln in $lines) {
-        if ($ln -match '^###\s*실수')        { $mode = 'm'; continue }
-        if ($ln -match '^###\s*다음 세션')    { $mode = 'g'; continue }
+        if ($ln -match '^###\s*실수')     { $mode = 'm'; continue }
+        if ($ln -match '^###\s*다음 세션') { $mode = 'g'; continue }
         if (($ln -match '^### ') -or ($ln -match '^---')) { $mode = ''; continue }
         if ($ln.Trim()) {
             if ($mode -eq 'm') { $mist += $ln }
@@ -1381,7 +1368,6 @@ if ($buf.Count) {
     Write-Output '최근 세션 교훈/가드레일 — 같은 실수 반복 금지:'
     $buf | ForEach-Object { Write-Output $_ }
 }
-
 $pending = @(Get-ChildItem -LiteralPath $dir -Filter '리뷰 대기 — 주간 리트로 *.md' -File |
              Sort-Object Name -Descending | Select-Object -First 1)
 if ($pending.Count -gt 0) {
@@ -1390,6 +1376,7 @@ if ($pending.Count -gt 0) {
         Write-Output ''
         Write-Output "[WEEKLY RETRO PENDING] 미처리 주간 리트로 후보가 있습니다: $($pending[0].Name)"
         Write-Output '→ 사용자에게 /weekly-retro 실행을 제안할 것.'
+        if (Test-Path (Join-Path (Split-Path $dir -Parent) 'wiki')) { Write-Output '   (주간 정비: 위키도 /lint 로 함께 점검하면 좋습니다 — 한 번에.)' }
     }
 }
 </script>
