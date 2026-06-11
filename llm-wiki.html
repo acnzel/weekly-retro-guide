@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내 지식 위키 만들기 (LLM Wiki) — 따라하기</title>
+<style>
+  :root {
+    --bg:#f6f7fb; --card:#ffffff; --ink:#1f2330; --mut:#6b7280; --line:#e6e8ef;
+    --accent:#0e9f6e; --accent2:#5b54e8; --good:#10b981; --warn:#f59e0b; --code:#1b1e2b;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",Roboto,sans-serif;
+    line-height:1.7; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:880px; margin:0 auto; padding:0 20px 120px; }
+  header.hero { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; padding:48px 20px 38px; }
+  header.hero .inner { max-width:880px; margin:0 auto; }
+  header.hero .back { color:#eafff6; font-size:14px; text-decoration:none; opacity:.95; }
+  header.hero h1 { font-size:29px; margin:12px 0 10px; letter-spacing:-.5px; }
+  header.hero p { font-size:17px; margin:0; opacity:.95; }
+  .osbar { position:sticky; top:0; z-index:50; background:rgba(255,255,255,.9); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line); padding:10px 0; }
+  .osbar .inner { max-width:880px; margin:0 auto; padding:0 20px; display:flex; align-items:center; gap:10px; }
+  .osbar .lbl { font-size:13px; color:var(--mut); margin-right:4px; }
+  .ostoggle button { border:1px solid var(--line); background:#fff; color:var(--ink); padding:7px 16px;
+    border-radius:999px; cursor:pointer; font-size:14px; font-weight:600; }
+  .ostoggle button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  h2 { font-size:22px; margin:42px 0 14px; letter-spacing:-.3px; }
+  h3 { font-size:17px; margin:24px 0 8px; }
+  p, li { font-size:15.5px; }
+  .lead { font-size:16.5px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin:16px 0;
+    box-shadow:0 1px 2px rgba(20,20,50,.04); }
+  .flow { display:grid; grid-template-columns:1fr; gap:10px; margin:16px 0; }
+  .flow .step { display:flex; gap:14px; align-items:flex-start; background:var(--card); border:1px solid var(--line);
+    border-radius:12px; padding:14px 16px; }
+  .flow .ic { font-size:24px; line-height:1; }
+  .flow .step b { display:block; font-size:15.5px; }
+  .flow .step span { color:var(--mut); font-size:14px; }
+  .steps { counter-reset:step; }
+  .stepblock { position:relative; padding-left:50px; margin:24px 0; }
+  .stepblock:before { counter-increment:step; content:counter(step); position:absolute; left:0; top:-2px;
+    width:34px; height:34px; border-radius:50%; background:var(--accent); color:#fff; font-weight:700;
+    display:flex; align-items:center; justify-content:center; }
+  .twocol { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:14px 0; }
+  .twocol .box { border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:var(--card); }
+  .twocol .box.raw { border-color:#cfe9dd; background:#f0fbf6; }
+  .twocol .box.wiki { border-color:#d9d7fb; background:#f4f3fe; }
+  @media (max-width:620px) { .twocol { grid-template-columns:1fr; } }
+  .filecard { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px 16px; margin:16px 0; }
+  .fhead { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .fmeta { display:flex; align-items:center; gap:10px; }
+  .fname { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:14px; font-weight:700; }
+  .badge { font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:999px; }
+  .b-mac { background:#e7f6ef; color:#0a7a52; }
+  .b-win { background:#e7f3ff; color:#1d6fd0; }
+  .b-both { background:#eef0ff; color:#4b46c9; }
+  .factions { display:flex; gap:8px; }
+  .btn { border:1px solid var(--line); background:#fff; color:var(--ink); padding:6px 14px; border-radius:8px;
+    cursor:pointer; font-size:13px; font-weight:600; }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+  .btn.copied { background:var(--good); color:#fff; border-color:var(--good); }
+  .fdesc { color:var(--mut); font-size:13.5px; margin:8px 0 4px; }
+  .fmust { color:#d92d20; font-weight:700; font-size:14px; margin:0 0 10px; background:#fff2f0;
+    border:1px solid #ffd5cf; border-radius:8px; padding:8px 12px; }
+  pre.code { background:var(--code); color:#e6e6f0; border-radius:10px; padding:14px 16px; overflow:auto;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px; line-height:1.55;
+    max-height:340px; margin:0; }
+  code.inl { background:#e7f4ee; color:#0a7a52; padding:1px 6px; border-radius:5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; }
+  .cmd { display:flex; gap:14px; align-items:flex-start; }
+  .cmd .tag { font-family:ui-monospace,Menlo,Consolas,monospace; font-weight:700; color:#0a7a52;
+    background:#e7f4ee; border-radius:8px; padding:4px 10px; white-space:nowrap; }
+  .callout { border-left:4px solid var(--accent); background:#eefaf4; padding:12px 16px; border-radius:0 10px 10px 0; margin:14px 0; }
+  .callout.warn { border-color:var(--warn); background:#fff8ec; }
+  .callout.info { border-color:var(--accent2); background:#f3f3fe; }
+  details { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:6px 16px; margin:14px 0; }
+  summary { cursor:pointer; font-weight:700; padding:8px 0; font-size:16px; }
+  details[open] summary { border-bottom:1px solid var(--line); margin-bottom:10px; }
+  .pathex { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12.5px; background:#eef0f6;
+    padding:8px 12px; border-radius:8px; display:block; margin:6px 0; overflow:auto; white-space:pre; }
+  .muted { color:var(--mut); font-size:13.5px; }
+  a { color:var(--accent); }
+  hr.sep { border:none; border-top:1px solid var(--line); margin:34px 0; }
+  .backlink { display:inline-block; margin-top:30px; font-weight:600; }
+</style>
+</head>
+<body data-os="mac">
+<header class="hero">
+  <div class="inner">
+    <a class="back" href="./">← 주간 리트로 설치 가이드로 돌아가기</a>
+    <h1>🧩 한 단계 더 — 내 지식이 쌓이는 위키 (LLM Wiki)</h1>
+    <p>읽은 자료를 넣을수록 AI가 스스로 정리·연결해, 나만의 백과사전이 자라납니다. 비개발자용 따라하기.</p>
+  </div>
+</header>
+
+<div class="osbar">
+  <div class="inner">
+    <span class="lbl">내 컴퓨터:</span>
+    <div class="ostoggle">
+      <button id="btn-mac" class="active" onclick="setOS('mac')"> Mac</button>
+      <button id="btn-win" onclick="setOS('win')">⊞ Windows</button>
+    </div>
+    <span class="muted" id="oshint" style="margin-left:auto"></span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <h2>왜 이게 다음 단계인가요?</h2>
+  <p class="lead">앞 가이드(주간 리트로)는 <b>"내가 일하며 얻은 교훈"</b>을 쌓는 거였어요.
+  이번엔 <b>"내가 읽고 모으는 자료·지식"</b>을 쌓습니다. 둘은 짝입니다 — 하나는 <b>일하는 법</b>, 하나는 <b>아는 것</b>이 자라요.</p>
+  <div class="card">
+    한 줄 비유:
+    <ul>
+      <li><b>그냥 검색(RAG)</b> — 그때그때 찾아보고 버립니다. 아무것도 안 쌓여요.</li>
+      <li><b>LLM 위키</b> — 자료를 넣을 때마다 AI가 관련 페이지 여러 개를 동시에 정리·연결합니다. <b>지식이 영구히 쌓이고 서로 이어집니다.</b></li>
+    </ul>
+    핵심 역할 분담: <b>나는 좋은 자료를 모으고 좋은 질문만</b>, <b>정리는 AI가</b>. (Andrej Karpathy의 'LLM Wiki' 아이디어)
+  </div>
+
+  <h2>폴더 딱 두 개만 기억하세요</h2>
+  <div class="twocol">
+    <div class="box raw">
+      <b>📥 raw/</b> — 내가 넣는 곳
+      <p class="muted" style="margin:6px 0 0">기사·PDF·이미지·메모 등 <b>원본</b>을 그냥 던져 넣는 보관소. <b>AI는 읽기만 하고 절대 건드리지 않습니다.</b></p>
+    </div>
+    <div class="box wiki">
+      <b>🧠 wiki/</b> — AI가 채우는 곳
+      <p class="muted" style="margin:6px 0 0">AI가 raw 자료를 읽어 <b>정리·연결</b>해 만드는 지식 페이지들(인물·개념·요약·비교). 목차(index)와 기록(log)도 자동 관리.</p>
+    </div>
+  </div>
+  <span class="pathex">내위키폴더/
+├── raw/        ← 여기에 자료를 넣으세요 (원본 보관, AI는 안 건드림)
+└── wiki/       ← AI가 정리해서 채웁니다
+    ├── entities/      (인물·회사·제품·기술)
+    ├── concepts/      (개념·주제)
+    ├── sources/       (원본 요약)
+    ├── comparisons/   (질문에 대한 분석 저장)
+    ├── index.md       (목차 — 항상 먼저 봄)
+    └── log.md         (변경 기록)</span>
+
+  <h2>raw 폴더 사용법</h2>
+  <div class="card">
+    <ul>
+      <li><b>웹 기사</b> — Obsidian <b>Web Clipper</b>(브라우저 확장)로 한 번 클릭하면 raw로 저장됩니다.</li>
+      <li><b>PDF·이미지·데이터</b> — 그냥 <code class="inl">raw/</code> 폴더에 끌어다 넣으세요.</li>
+      <li><b>이름 규칙</b>(권장) — <code class="inl">2026-06-11-기사제목.md</code> 처럼 날짜로 시작하면 정리가 쉬워요.</li>
+    </ul>
+    <span class="muted">raw에 넣기만 하면 끝. 정리는 다음 <code class="inl">/ingest</code> 한 번으로 AI가 합니다.</span>
+  </div>
+
+  <h2>명령은 딱 세 개</h2>
+  <div class="card">
+    <div class="cmd"><span class="tag">/ingest</span><div><b>자료 넣기</b><br><span class="muted">raw에 넣은 자료를 위키로 정리. 관련 페이지들을 동시에 갱신하고, 충돌하면 ⚠️ 표시, 기록을 남깁니다.</span><br><span class="muted">예) <code class="inl">raw/2026-06-11-기사.md 를 /ingest 해줘</code></span></div></div>
+    <hr class="sep" style="margin:16px 0">
+    <div class="cmd"><span class="tag">/query</span><div><b>물어보기</b><br><span class="muted">위키를 근거로 답합니다. 어느 페이지에서 나왔는지 알려주고, 좋은 답은 위키에 영구 저장할지 물어봅니다.</span><br><span class="muted">예) <code class="inl">/query GPT-5가 시장에 줄 영향 정리해줘</code></span></div></div>
+    <hr class="sep" style="margin:16px 0">
+    <div class="cmd"><span class="tag">/lint</span><div><b>점검(주 1회)</b><br><span class="muted">모순·고아 페이지·빠진 연결·오래된 내용을 찾아 보여주고, 승인한 것만 고칩니다. "다음에 조사할 주제"도 제안.</span><br><span class="muted">예) <code class="inl">/lint</code> — 주간 리트로 하는 날 같이 돌리면 좋아요.</span></div></div>
+  </div>
+  <div class="callout info">셋 다 <b>사람이 통제</b>합니다. AI가 멋대로 지우거나 바꾸지 않고, 정리한 내용을 보여준 뒤 진행해요. (주간 리트로의 '승인 게이트'와 같은 철학)</div>
+
+  <hr class="sep">
+
+  <h2>따라하기 — 설치</h2>
+
+  <div class="steps">
+    <div class="stepblock">
+      <h3>준비 (이미 돼 있을 거예요)</h3>
+      <p><b>Claude Code</b>(데스크탑 앱 Code 탭 추천)와 <b>Obsidian</b>. 앞 가이드를 따라 설치했다면 그대로 쓰면 됩니다.
+      위키 전용 폴더를 하나 정하세요(새 폴더도 OK, 기존 보관함 안의 하위 폴더도 OK).</p>
+      <div class="only-mac"><span class="pathex">예) /Users/이름/Documents/MyWiki</span><span class="muted">Finder에서 폴더 option+우클릭 → "경로 이름 복사"</span></div>
+      <div class="only-win"><span class="pathex">예) C:\Users\이름\Documents\MyWiki</span><span class="muted">탐색기에서 폴더 Shift+우클릭 → "경로로 복사"</span></div>
+    </div>
+
+    <div class="stepblock">
+      <h3>설치 스크립트 실행</h3>
+      <p>맨 위 한 줄(위키 폴더 경로)만 본인 <b>전체 경로</b>로 바꾼 뒤 실행하세요. <code class="inl">~</code> 로 시작하면 안 되고, 안 바꾸면 스크립트가 알려주고 멈춥니다.</p>
+      <div class="only-mac"><div class="callout">아래 <b>다운로드</b> → <code class="inl">.command</code> 더블클릭(차단 시 우클릭→"열기"), 또는 <b>복사</b> → 터미널에 붙여넣기.</div></div>
+      <div class="only-win"><div class="callout">아래 <b>복사</b> → PowerShell에 붙여넣고 Enter. (막히면 <code class="inl">Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned</code> 먼저)</div></div>
+      <p class="muted">💡 데스크탑 앱만 쓰는 분은 Code 탭의 <b>통합 터미널</b>(<code class="inl">Ctrl+`</code>)에 붙여넣어도 됩니다.</p>
+      
+    <div class="filecard only-mac">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">install-llm-wiki-mac.command</span><span class="badge b-mac">Mac · 원클릭</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('wiki-mac', this)">복사</button>
+          <button class="btn" onclick="downloadFile('wiki-mac','install-llm-wiki-mac.command')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">이 파일 하나가 위키 폴더 구조(raw/·wiki/) + 규약(CLAUDE.md) + /ingest·/query·/lint 세 명령을 자동 설치합니다.</p>
+      <p class="fmust">⚠️ 실행 전, 맨 위 한 줄의 &quot;여기에…붙여넣으세요&quot;를 위키 폴더의 전체 경로로 반드시 바꾸세요.</p>
+      <pre class="code" id="code-wiki-mac"></pre>
+      <script type="text/plain" id="src-wiki-mac">#!/bin/bash
+# ============================================================
+#  내 지식 위키(LLM Wiki) 설치 (Mac)
+#  비개발자용 — 이 파일을 더블클릭하거나 터미널에 붙여넣어 실행하세요.
+# ============================================================
+set -euo pipefail
+
+# ▼▼▼▼▼ 여기 한 줄만 바꾸세요 ▼▼▼▼▼
+# 위키를 만들(또는 이미 있는) 폴더의 "전체 경로"를 따옴표 안에 넣으세요.
+#   · 예) WIKI_DIR="/Users/이름/Documents/MyWiki"
+WIKI_DIR="여기에 위키를 만들 폴더의 전체 경로를 붙여넣으세요"
+# ▲▲▲▲▲ 여기 한 줄만 바꾸세요 ▲▲▲▲▲
+
+# --- 경로 안전 처리 (비개발자 실수 방지) ---
+if [ "$WIKI_DIR" = "여기에 위키를 만들 폴더의 전체 경로를 붙여넣으세요" ]; then
+  echo "⚠️  맨 위 WIKI_DIR 를 '위키를 만들 폴더의 전체 경로'로 바꾼 뒤 다시 실행하세요."
+  echo "     예) \"/Users/$(whoami)/Documents/MyWiki\""
+  exit 1
+fi
+WIKI_DIR="$(printf '%s' "$WIKI_DIR" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'\$//")"
+case "$WIKI_DIR" in
+  "~")    WIKI_DIR="$HOME" ;;
+  "~/"*)  WIKI_DIR="$HOME/${WIKI_DIR#\~/}" ;;
+esac
+case "$WIKI_DIR" in
+  /*) : ;;
+  *)  echo "⚠️  경로가 올바르지 않습니다: '$WIKI_DIR'  (전체 경로를 넣고 ~ 로 시작하지 마세요)"; exit 1 ;;
+esac
+echo "→ 위키 폴더: $WIKI_DIR"
+
+SKILLS="$HOME/.claude/skills"
+echo "→ 폴더 구조 생성..."
+mkdir -p "$WIKI_DIR/raw/assets" "$WIKI_DIR/wiki/entities" "$WIKI_DIR/wiki/concepts" "$WIKI_DIR/wiki/sources" "$WIKI_DIR/wiki/comparisons" "$SKILLS/ingest" "$SKILLS/query" "$SKILLS/lint"
+
+echo "→ 위키 규약(CLAUDE.md)..."
+if [ ! -f "$WIKI_DIR/CLAUDE.md" ]; then
+cat > "$WIKI_DIR/CLAUDE.md" <<'WIKI_CLAUDE_EOF'
+# 내 지식 위키 (LLM Wiki)
+
+이 폴더는 "넣을수록 지식이 쌓이고 서로 연결되는" 위키입니다. (Andrej Karpathy의 LLM Wiki 패턴)
+
+- **사람의 역할**: 좋은 자료를 모으고(`raw/`에 넣기), 좋은 질문을 한다.
+- **AI(Claude)의 역할**: 자료를 읽고 `wiki/` 안에 정리·연결·갱신한다.
+
+## 폴더 규칙
+- `raw/` — 원본 자료 보관소. **읽기 전용: AI는 절대 수정/삭제하지 않는다.** (기사, PDF, 이미지, 데이터)
+- `wiki/` — AI가 관리하는 정리된 지식.
+	- `wiki/entities/` — 사람·회사·제품·기술 등 "대상"
+	- `wiki/concepts/` — 개념·방법·주제
+	- `wiki/sources/` — 원본 자료의 요약 페이지
+	- `wiki/comparisons/` — 비교·분석 결과(질문에 대한 가치 있는 답을 저장)
+	- `wiki/index.md` — 목차. **항상 먼저 읽는 허브.**
+	- `wiki/log.md` — 변경 기록
+
+## 페이지 형식 (각 wiki 노트 맨 위)
+```
+---
+tags: [관련, 태그]
+source_count: 0
+last_updated: YYYY-MM-DD
+---
+```
+본문에서 관련 페이지는 `[[페이지이름]]` 위키링크로 잇는다.
+
+## 작업 원칙
+- 새 자료 하나가 **여러 wiki 페이지를 동시에** 갱신하도록(지식이 연결되도록) 한다.
+- 기존 내용과 충돌하면 그 자리에 `⚠️ CONFLICT: (무엇이 충돌하는지)`를 남기고 사람에게 보고한다.
+- 모든 정리 작업은 `wiki/log.md`에 한 줄로 남긴다.
+- 대량 삭제·되돌리기는 사람 승인 없이 하지 않는다.
+- `raw/`는 어떤 경우에도 수정하지 않는다.
+WIKI_CLAUDE_EOF
+else echo "   (이미 있음 — 건너뜀)"; fi
+
+echo "→ 목차/기록/안내 파일..."
+[ -f "$WIKI_DIR/wiki/index.md" ] || cat > "$WIKI_DIR/wiki/index.md" <<'IDX_EOF'
+# 위키 목차 (index)
+
+> 새 자료를 /ingest 하면 이 목차가 자동으로 갱신됩니다.
+
+## Entities
+
+## Concepts
+
+## Sources
+
+## Comparisons
+IDX_EOF
+[ -f "$WIKI_DIR/wiki/log.md" ] || printf '# 변경 기록 (log)\n' > "$WIKI_DIR/wiki/log.md"
+[ -f "$WIKI_DIR/raw/README.md" ] || cat > "$WIKI_DIR/raw/README.md" <<'RAW_EOF'
+# raw — 원본 자료 보관소
+
+여기에 기사·PDF·이미지·데이터 등 "원본"을 넣으세요.
+AI는 이 폴더를 읽기만 하고 절대 수정하지 않습니다.
+파일 이름 예) 2026-06-11-기사제목.md
+RAW_EOF
+
+echo "→ /ingest 스킬..."
+cat > "$SKILLS/ingest/SKILL.md" <<'INGEST_EOF'
+---
+name: ingest
+description: Use when the user says "/ingest", "인제스트", "자료 넣어줘", or points at a file in raw/ to add into the knowledge wiki. Reads a source file from raw/, extracts key insights, creates/updates related wiki pages (entities, concepts, sources), flags contradictions, updates wiki/index.md, and records the change in wiki/log.md. Never modifies raw/.
+---
+
+# /ingest — 자료를 위키에 넣기
+
+현재 폴더(위키)의 `raw/`에 있는 원본 자료를 읽어 `wiki/`로 정리한다.
+
+## 절차
+1. 대상 raw 파일을 읽는다. 사용자가 파일을 지정하지 않았으면 `raw/`에서 최근/후보 파일을 보여주고 무엇을 넣을지 물어본다. **`raw/`는 절대 수정·삭제하지 않는다.**
+2. 핵심 인사이트 3~7개를 뽑는다.
+3. 관련 `wiki/entities/*`·`wiki/concepts/*` 페이지를 찾아 **갱신**하거나, 없으면 **새로 만든다**(페이지 형식: frontmatter + 본문, 관련 페이지는 `[[위키링크]]`로 연결).
+4. `wiki/sources/`에 이 자료의 요약 페이지를 만든다(원본 `raw/` 경로를 명시).
+5. 기존 내용과 모순되면 그 자리에 `⚠️ CONFLICT: (설명)`을 남기고 사람에게 보고한다.
+6. `wiki/index.md`(목차)를 갱신한다.
+7. `wiki/log.md`에 기록한다:
+	```
+	## [YYYY-MM-DD] ingest | (자료 제목)
+	+ wiki/sources/...      (새로 만든 파일)
+	✎ wiki/entities/...     (수정한 파일)
+	```
+8. 무엇을 어떻게 갱신했는지 사람에게 짧게 요약 보고한다.
+
+## 원칙
+- 사람은 자료를 모으고, 정리는 AI가 한다.
+- 한 자료가 여러 페이지를 동시에 갱신하도록 해서 지식이 흩어지지 않고 연결되게 한다.
+- 확실하지 않은 사실은 단정하지 말고 `?`나 출처를 함께 남긴다.
+INGEST_EOF
+echo "→ /query 스킬..."
+cat > "$SKILLS/query/SKILL.md" <<'QUERY_EOF'
+---
+name: query
+description: Use when the user says "/query", "쿼리", "위키에 물어봐", or asks a question to be answered from the knowledge wiki. Reads wiki/index.md first, gathers related pages, synthesizes an answer in the requested format, shows which pages it used, and offers to save valuable answers as a permanent wiki page.
+---
+
+# /query — 위키에 물어보기
+
+쌓인 위키를 근거로 질문에 답한다.
+
+## 절차
+1. 먼저 `wiki/index.md`(목차)를 읽어 관련 페이지를 파악한다.
+2. 관련 `wiki/entities/*`·`wiki/concepts/*`·`wiki/sources/*`·`wiki/comparisons/*`를 읽어 종합한다.
+3. 사용자가 원하는 형식(글/표/요약/슬라이드 등)으로 답한다. **근거가 된 위키 페이지 목록을 함께 보여준다.**
+4. **중요:** 답이 가치 있으면 "이 답을 `wiki/comparisons/(이름).md` 로 영구 저장할까요?"라고 제안하고, 승인하면 페이지로 저장한다. (오늘의 답이 다음 질문의 재료가 되도록 — 지식이 쌓인다.)
+
+## 원칙
+- 위키에 근거가 없으면 추측하지 말고 "위키에 아직 자료가 부족하다"고 말하고, 무엇을 `/ingest` 하면 좋을지 제안한다.
+- 답에는 항상 "어느 페이지에서 나왔는지"를 밝혀 신뢰할 수 있게 한다.
+QUERY_EOF
+echo "→ /lint 스킬..."
+cat > "$SKILLS/lint/SKILL.md" <<'LINT_EOF'
+---
+name: lint
+description: Use when the user says "/lint", "린트", "위키 점검", or wants a periodic health check of the knowledge wiki. Scans wiki/ for contradictions, orphan pages, stale claims, and missing links; lists findings; applies only approved fixes; logs changes; and suggests next research topics. Recommended weekly.
+---
+
+# /lint — 위키 건강검진 (주 1회 권장)
+
+위키가 커져도 일관성·최신성을 유지하기 위한 점검.
+
+## 절차
+1. `wiki/` 전체를 훑는다(특히 최근 `/ingest`된 내용 반영).
+2. 다음을 찾아 목록으로 정리한다:
+	- ⚠️ **모순** — 서로 상충하는 서술
+	- 📭 **고아 페이지** — 아무 데서도 링크되지 않는 페이지
+	- 🕒 **오래된 주장** — 새 자료로 뒤집힌 내용
+	- 🔗 **빠진 연결** — `[[위키링크]]`로 이어야 할 곳
+	- 🔍 **데이터 갭** — 위키에 비어 있는 중요한 주제
+3. 각 항목을 사람에게 보여주고 **승인받은 것만** 고친다.
+4. 고친 내용을 `wiki/log.md`에 기록한다.
+5. "다음에 조사하면 좋을 주제 3개"를 제안한다.
+
+## 원칙
+- 사람 승인 없이 대량 삭제하지 않는다.
+- 매주 한 번(예: 주간 리트로 하는 날)에 같이 돌리면 좋다.
+LINT_EOF
+
+echo ""
+echo "✅ 설치 완료!"
+echo "   위키 폴더 : $WIKI_DIR"
+echo "   사용법: Claude Code(또는 데스크탑 앱 Code 탭)를 이 폴더로 열고,"
+echo "          raw/ 에 자료를 넣은 뒤  /ingest  실행. 질문은 /query, 주간 점검은 /lint."
+</script>
+    </div>
+    <div class="filecard only-win">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">install-llm-wiki-windows.ps1</span><span class="badge b-win">Windows · 원클릭</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('wiki-win', this)">복사</button>
+          <button class="btn" onclick="downloadFile('wiki-win','install-llm-wiki-windows.ps1')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">이 스크립트 하나가 위키 폴더 구조 + 규약 + 세 명령을 자동 설치합니다.</p>
+      <p class="fmust">⚠️ 실행 전, 맨 위 한 줄($WikiDir)의 &quot;여기에…붙여넣으세요&quot;를 위키 폴더의 전체 경로로 반드시 바꾸세요.</p>
+      <pre class="code" id="code-wiki-win"></pre>
+      <script type="text/plain" id="src-wiki-win"># ============================================================
+#  내 지식 위키(LLM Wiki) 설치 (Windows / PowerShell)
+#  비개발자용 — PowerShell 창에 통째로 붙여넣고 Enter 하세요.
+#  (막히면 먼저: Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned)
+# ============================================================
+
+# ▼▼▼▼▼ 여기 한 줄만 바꾸세요 ▼▼▼▼▼
+# 위키를 만들(또는 이미 있는) 폴더의 "전체 경로"를 따옴표 안에 넣으세요.
+#   · 예) $WikiDir = "C:\Users\이름\Documents\MyWiki"
+$WikiDir = "여기에 위키를 만들 폴더의 전체 경로를 붙여넣으세요"
+# ▲▲▲▲▲ 여기 한 줄만 바꾸세요 ▲▲▲▲▲
+
+$ErrorActionPreference = 'Stop'
+function Write-Utf8NoBom($p, $t) { [System.IO.File]::WriteAllText($p, $t, (New-Object System.Text.UTF8Encoding($false))) }
+
+$WikiDir = $WikiDir.Trim().Trim('"').Trim("'")
+$WikiDir = [Environment]::ExpandEnvironmentVariables($WikiDir)
+if ($WikiDir.StartsWith('~')) { $WikiDir = $env:USERPROFILE + $WikiDir.Substring(1) }
+if ($WikiDir -eq "여기에 위키를 만들 폴더의 전체 경로를 붙여넣으세요") {
+    Write-Host "[!] 맨 위 `$WikiDir 를 '위키를 만들 폴더의 전체 경로'로 바꾼 뒤 다시 실행하세요." -ForegroundColor Yellow
+    Write-Host "    예) `"$env:USERPROFILE\Documents\MyWiki`""
+    exit 1
+}
+if (-not [System.IO.Path]::IsPathRooted($WikiDir)) {
+    Write-Host "[!] 경로가 올바르지 않습니다: '$WikiDir' (전체 경로를 넣고 ~ 로 시작하지 마세요)" -ForegroundColor Yellow
+    exit 1
+}
+Write-Host "-> 위키 폴더: $WikiDir"
+
+$skills = Join-Path $env:USERPROFILE '.claude\skills'
+foreach ($d in @(
+    (Join-Path $WikiDir 'raw\assets'),
+    (Join-Path $WikiDir 'wiki\entities'), (Join-Path $WikiDir 'wiki\concepts'),
+    (Join-Path $WikiDir 'wiki\sources'), (Join-Path $WikiDir 'wiki\comparisons'),
+    (Join-Path $skills 'ingest'), (Join-Path $skills 'query'), (Join-Path $skills 'lint')
+)) { if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null } }
+
+Write-Host '-> 위키 규약(CLAUDE.md)...'
+$claudePath = Join-Path $WikiDir 'CLAUDE.md'
+if (-not (Test-Path $claudePath)) {
+    $wikiClaude = @'
+# 내 지식 위키 (LLM Wiki)
+
+이 폴더는 "넣을수록 지식이 쌓이고 서로 연결되는" 위키입니다. (Andrej Karpathy의 LLM Wiki 패턴)
+
+- **사람의 역할**: 좋은 자료를 모으고(`raw/`에 넣기), 좋은 질문을 한다.
+- **AI(Claude)의 역할**: 자료를 읽고 `wiki/` 안에 정리·연결·갱신한다.
+
+## 폴더 규칙
+- `raw/` — 원본 자료 보관소. **읽기 전용: AI는 절대 수정/삭제하지 않는다.** (기사, PDF, 이미지, 데이터)
+- `wiki/` — AI가 관리하는 정리된 지식.
+	- `wiki/entities/` — 사람·회사·제품·기술 등 "대상"
+	- `wiki/concepts/` — 개념·방법·주제
+	- `wiki/sources/` — 원본 자료의 요약 페이지
+	- `wiki/comparisons/` — 비교·분석 결과(질문에 대한 가치 있는 답을 저장)
+	- `wiki/index.md` — 목차. **항상 먼저 읽는 허브.**
+	- `wiki/log.md` — 변경 기록
+
+## 페이지 형식 (각 wiki 노트 맨 위)
+```
+---
+tags: [관련, 태그]
+source_count: 0
+last_updated: YYYY-MM-DD
+---
+```
+본문에서 관련 페이지는 `[[페이지이름]]` 위키링크로 잇는다.
+
+## 작업 원칙
+- 새 자료 하나가 **여러 wiki 페이지를 동시에** 갱신하도록(지식이 연결되도록) 한다.
+- 기존 내용과 충돌하면 그 자리에 `⚠️ CONFLICT: (무엇이 충돌하는지)`를 남기고 사람에게 보고한다.
+- 모든 정리 작업은 `wiki/log.md`에 한 줄로 남긴다.
+- 대량 삭제·되돌리기는 사람 승인 없이 하지 않는다.
+- `raw/`는 어떤 경우에도 수정하지 않는다.
+'@
+    Write-Utf8NoBom $claudePath $wikiClaude
+}
+
+Write-Host '-> 목차/기록/안내 파일...'
+$idxPath = Join-Path $WikiDir 'wiki\index.md'
+if (-not (Test-Path $idxPath)) {
+    $idx = @'
+# 위키 목차 (index)
+
+> 새 자료를 /ingest 하면 이 목차가 자동으로 갱신됩니다.
+
+## Entities
+
+## Concepts
+
+## Sources
+
+## Comparisons
+'@
+    Write-Utf8NoBom $idxPath $idx
+}
+$logPath = Join-Path $WikiDir 'wiki\log.md'
+if (-not (Test-Path $logPath)) { Write-Utf8NoBom $logPath "# 변경 기록 (log)`r`n" }
+$rawPath = Join-Path $WikiDir 'raw\README.md'
+if (-not (Test-Path $rawPath)) {
+    $rawReadme = @'
+# raw — 원본 자료 보관소
+
+여기에 기사·PDF·이미지·데이터 등 "원본"을 넣으세요.
+AI는 이 폴더를 읽기만 하고 절대 수정하지 않습니다.
+파일 이름 예) 2026-06-11-기사제목.md
+'@
+    Write-Utf8NoBom $rawPath $rawReadme
+}
+
+Write-Host '-> /ingest /query /lint 스킬...'
+Write-Utf8NoBom (Join-Path $skills 'ingest\SKILL.md') @'
+---
+name: ingest
+description: Use when the user says "/ingest", "인제스트", "자료 넣어줘", or points at a file in raw/ to add into the knowledge wiki. Reads a source file from raw/, extracts key insights, creates/updates related wiki pages (entities, concepts, sources), flags contradictions, updates wiki/index.md, and records the change in wiki/log.md. Never modifies raw/.
+---
+
+# /ingest — 자료를 위키에 넣기
+
+현재 폴더(위키)의 `raw/`에 있는 원본 자료를 읽어 `wiki/`로 정리한다.
+
+## 절차
+1. 대상 raw 파일을 읽는다. 사용자가 파일을 지정하지 않았으면 `raw/`에서 최근/후보 파일을 보여주고 무엇을 넣을지 물어본다. **`raw/`는 절대 수정·삭제하지 않는다.**
+2. 핵심 인사이트 3~7개를 뽑는다.
+3. 관련 `wiki/entities/*`·`wiki/concepts/*` 페이지를 찾아 **갱신**하거나, 없으면 **새로 만든다**(페이지 형식: frontmatter + 본문, 관련 페이지는 `[[위키링크]]`로 연결).
+4. `wiki/sources/`에 이 자료의 요약 페이지를 만든다(원본 `raw/` 경로를 명시).
+5. 기존 내용과 모순되면 그 자리에 `⚠️ CONFLICT: (설명)`을 남기고 사람에게 보고한다.
+6. `wiki/index.md`(목차)를 갱신한다.
+7. `wiki/log.md`에 기록한다:
+	```
+	## [YYYY-MM-DD] ingest | (자료 제목)
+	+ wiki/sources/...      (새로 만든 파일)
+	✎ wiki/entities/...     (수정한 파일)
+	```
+8. 무엇을 어떻게 갱신했는지 사람에게 짧게 요약 보고한다.
+
+## 원칙
+- 사람은 자료를 모으고, 정리는 AI가 한다.
+- 한 자료가 여러 페이지를 동시에 갱신하도록 해서 지식이 흩어지지 않고 연결되게 한다.
+- 확실하지 않은 사실은 단정하지 말고 `?`나 출처를 함께 남긴다.
+'@
+Write-Utf8NoBom (Join-Path $skills 'query\SKILL.md') @'
+---
+name: query
+description: Use when the user says "/query", "쿼리", "위키에 물어봐", or asks a question to be answered from the knowledge wiki. Reads wiki/index.md first, gathers related pages, synthesizes an answer in the requested format, shows which pages it used, and offers to save valuable answers as a permanent wiki page.
+---
+
+# /query — 위키에 물어보기
+
+쌓인 위키를 근거로 질문에 답한다.
+
+## 절차
+1. 먼저 `wiki/index.md`(목차)를 읽어 관련 페이지를 파악한다.
+2. 관련 `wiki/entities/*`·`wiki/concepts/*`·`wiki/sources/*`·`wiki/comparisons/*`를 읽어 종합한다.
+3. 사용자가 원하는 형식(글/표/요약/슬라이드 등)으로 답한다. **근거가 된 위키 페이지 목록을 함께 보여준다.**
+4. **중요:** 답이 가치 있으면 "이 답을 `wiki/comparisons/(이름).md` 로 영구 저장할까요?"라고 제안하고, 승인하면 페이지로 저장한다. (오늘의 답이 다음 질문의 재료가 되도록 — 지식이 쌓인다.)
+
+## 원칙
+- 위키에 근거가 없으면 추측하지 말고 "위키에 아직 자료가 부족하다"고 말하고, 무엇을 `/ingest` 하면 좋을지 제안한다.
+- 답에는 항상 "어느 페이지에서 나왔는지"를 밝혀 신뢰할 수 있게 한다.
+'@
+Write-Utf8NoBom (Join-Path $skills 'lint\SKILL.md') @'
+---
+name: lint
+description: Use when the user says "/lint", "린트", "위키 점검", or wants a periodic health check of the knowledge wiki. Scans wiki/ for contradictions, orphan pages, stale claims, and missing links; lists findings; applies only approved fixes; logs changes; and suggests next research topics. Recommended weekly.
+---
+
+# /lint — 위키 건강검진 (주 1회 권장)
+
+위키가 커져도 일관성·최신성을 유지하기 위한 점검.
+
+## 절차
+1. `wiki/` 전체를 훑는다(특히 최근 `/ingest`된 내용 반영).
+2. 다음을 찾아 목록으로 정리한다:
+	- ⚠️ **모순** — 서로 상충하는 서술
+	- 📭 **고아 페이지** — 아무 데서도 링크되지 않는 페이지
+	- 🕒 **오래된 주장** — 새 자료로 뒤집힌 내용
+	- 🔗 **빠진 연결** — `[[위키링크]]`로 이어야 할 곳
+	- 🔍 **데이터 갭** — 위키에 비어 있는 중요한 주제
+3. 각 항목을 사람에게 보여주고 **승인받은 것만** 고친다.
+4. 고친 내용을 `wiki/log.md`에 기록한다.
+5. "다음에 조사하면 좋을 주제 3개"를 제안한다.
+
+## 원칙
+- 사람 승인 없이 대량 삭제하지 않는다.
+- 매주 한 번(예: 주간 리트로 하는 날)에 같이 돌리면 좋다.
+'@
+
+Write-Host ''
+Write-Host '[OK] 설치 완료!'
+Write-Host "   위키 폴더 : $WikiDir"
+Write-Host '   사용법: Claude Code(데스크탑 앱 Code 탭)를 이 폴더로 열고, raw/ 에 자료를 넣은 뒤 /ingest 실행. 질문은 /query, 주간 점검은 /lint.'
+</script>
+    </div>
+    </div>
+
+    <div class="stepblock">
+      <h3>첫 사용</h3>
+      <ol>
+        <li>Claude Code(또는 데스크탑 앱 <b>Code 탭 · Local</b>)를 <b>위키 폴더</b>로 엽니다.</li>
+        <li><code class="inl">raw/</code> 에 자료(기사·PDF 등)를 하나 넣습니다.</li>
+        <li><code class="inl">/ingest</code> 실행 → AI가 <code class="inl">wiki/</code>에 정리합니다. 결과를 확인하세요.</li>
+        <li>궁금한 걸 <code class="inl">/query</code> 로 물어보고, 일주일에 한 번 <code class="inl">/lint</code> 로 점검합니다.</li>
+      </ol>
+      <div class="callout warn">⚠️ 반드시 <b>Code 탭 + 내 컴퓨터(Local)</b>에서, 위키 폴더를 열고 사용하세요. (Chat 탭·클라우드(Remote)에서는 폴더 파일을 못 다룹니다.)</div>
+    </div>
+  </div>
+
+  <hr class="sep">
+
+  <h2>개별 파일 (수동 설치용)</h2>
+  <p class="muted">위 설치 스크립트가 아래 파일들을 알아서 만들어 줍니다. 직접 살펴보거나 수동 설치할 때만 사용하세요.
+  <code class="inl">CLAUDE.md</code>는 위키 폴더 맨 위에, 스킬들은 각각 <code class="inl">~/.claude/skills/(이름)/SKILL.md</code> 로 두면 됩니다.</p>
+  
+    <div class="filecard only-both">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">CLAUDE.md</span><span class="badge b-both">공통</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('wiki-claude', this)">복사</button>
+          <button class="btn" onclick="downloadFile('wiki-claude','CLAUDE.md')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">위키 폴더 맨 위에 두는 &#x27;규약&#x27; 파일. 작동 방식·폴더 규칙·페이지 형식을 AI에게 알려줍니다.</p>
+      <pre class="code" id="code-wiki-claude"></pre>
+      <script type="text/plain" id="src-wiki-claude"># 내 지식 위키 (LLM Wiki)
+
+이 폴더는 "넣을수록 지식이 쌓이고 서로 연결되는" 위키입니다. (Andrej Karpathy의 LLM Wiki 패턴)
+
+- **사람의 역할**: 좋은 자료를 모으고(`raw/`에 넣기), 좋은 질문을 한다.
+- **AI(Claude)의 역할**: 자료를 읽고 `wiki/` 안에 정리·연결·갱신한다.
+
+## 폴더 규칙
+- `raw/` — 원본 자료 보관소. **읽기 전용: AI는 절대 수정/삭제하지 않는다.** (기사, PDF, 이미지, 데이터)
+- `wiki/` — AI가 관리하는 정리된 지식.
+	- `wiki/entities/` — 사람·회사·제품·기술 등 "대상"
+	- `wiki/concepts/` — 개념·방법·주제
+	- `wiki/sources/` — 원본 자료의 요약 페이지
+	- `wiki/comparisons/` — 비교·분석 결과(질문에 대한 가치 있는 답을 저장)
+	- `wiki/index.md` — 목차. **항상 먼저 읽는 허브.**
+	- `wiki/log.md` — 변경 기록
+
+## 페이지 형식 (각 wiki 노트 맨 위)
+```
+---
+tags: [관련, 태그]
+source_count: 0
+last_updated: YYYY-MM-DD
+---
+```
+본문에서 관련 페이지는 `[[페이지이름]]` 위키링크로 잇는다.
+
+## 작업 원칙
+- 새 자료 하나가 **여러 wiki 페이지를 동시에** 갱신하도록(지식이 연결되도록) 한다.
+- 기존 내용과 충돌하면 그 자리에 `⚠️ CONFLICT: (무엇이 충돌하는지)`를 남기고 사람에게 보고한다.
+- 모든 정리 작업은 `wiki/log.md`에 한 줄로 남긴다.
+- 대량 삭제·되돌리기는 사람 승인 없이 하지 않는다.
+- `raw/`는 어떤 경우에도 수정하지 않는다.
+</script>
+    </div>
+    <div class="filecard only-both">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">ingest-SKILL.md</span><span class="badge b-both">공통</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('ingest', this)">복사</button>
+          <button class="btn" onclick="downloadFile('ingest','ingest-SKILL.md')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">/ingest 명령. ~/.claude/skills/ingest/SKILL.md 에 둡니다.</p>
+      <pre class="code" id="code-ingest"></pre>
+      <script type="text/plain" id="src-ingest">---
+name: ingest
+description: Use when the user says "/ingest", "인제스트", "자료 넣어줘", or points at a file in raw/ to add into the knowledge wiki. Reads a source file from raw/, extracts key insights, creates/updates related wiki pages (entities, concepts, sources), flags contradictions, updates wiki/index.md, and records the change in wiki/log.md. Never modifies raw/.
+---
+
+# /ingest — 자료를 위키에 넣기
+
+현재 폴더(위키)의 `raw/`에 있는 원본 자료를 읽어 `wiki/`로 정리한다.
+
+## 절차
+1. 대상 raw 파일을 읽는다. 사용자가 파일을 지정하지 않았으면 `raw/`에서 최근/후보 파일을 보여주고 무엇을 넣을지 물어본다. **`raw/`는 절대 수정·삭제하지 않는다.**
+2. 핵심 인사이트 3~7개를 뽑는다.
+3. 관련 `wiki/entities/*`·`wiki/concepts/*` 페이지를 찾아 **갱신**하거나, 없으면 **새로 만든다**(페이지 형식: frontmatter + 본문, 관련 페이지는 `[[위키링크]]`로 연결).
+4. `wiki/sources/`에 이 자료의 요약 페이지를 만든다(원본 `raw/` 경로를 명시).
+5. 기존 내용과 모순되면 그 자리에 `⚠️ CONFLICT: (설명)`을 남기고 사람에게 보고한다.
+6. `wiki/index.md`(목차)를 갱신한다.
+7. `wiki/log.md`에 기록한다:
+	```
+	## [YYYY-MM-DD] ingest | (자료 제목)
+	+ wiki/sources/...      (새로 만든 파일)
+	✎ wiki/entities/...     (수정한 파일)
+	```
+8. 무엇을 어떻게 갱신했는지 사람에게 짧게 요약 보고한다.
+
+## 원칙
+- 사람은 자료를 모으고, 정리는 AI가 한다.
+- 한 자료가 여러 페이지를 동시에 갱신하도록 해서 지식이 흩어지지 않고 연결되게 한다.
+- 확실하지 않은 사실은 단정하지 말고 `?`나 출처를 함께 남긴다.
+</script>
+    </div>
+    <div class="filecard only-both">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">query-SKILL.md</span><span class="badge b-both">공통</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('query', this)">복사</button>
+          <button class="btn" onclick="downloadFile('query','query-SKILL.md')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">/query 명령. ~/.claude/skills/query/SKILL.md 에 둡니다.</p>
+      <pre class="code" id="code-query"></pre>
+      <script type="text/plain" id="src-query">---
+name: query
+description: Use when the user says "/query", "쿼리", "위키에 물어봐", or asks a question to be answered from the knowledge wiki. Reads wiki/index.md first, gathers related pages, synthesizes an answer in the requested format, shows which pages it used, and offers to save valuable answers as a permanent wiki page.
+---
+
+# /query — 위키에 물어보기
+
+쌓인 위키를 근거로 질문에 답한다.
+
+## 절차
+1. 먼저 `wiki/index.md`(목차)를 읽어 관련 페이지를 파악한다.
+2. 관련 `wiki/entities/*`·`wiki/concepts/*`·`wiki/sources/*`·`wiki/comparisons/*`를 읽어 종합한다.
+3. 사용자가 원하는 형식(글/표/요약/슬라이드 등)으로 답한다. **근거가 된 위키 페이지 목록을 함께 보여준다.**
+4. **중요:** 답이 가치 있으면 "이 답을 `wiki/comparisons/(이름).md` 로 영구 저장할까요?"라고 제안하고, 승인하면 페이지로 저장한다. (오늘의 답이 다음 질문의 재료가 되도록 — 지식이 쌓인다.)
+
+## 원칙
+- 위키에 근거가 없으면 추측하지 말고 "위키에 아직 자료가 부족하다"고 말하고, 무엇을 `/ingest` 하면 좋을지 제안한다.
+- 답에는 항상 "어느 페이지에서 나왔는지"를 밝혀 신뢰할 수 있게 한다.
+</script>
+    </div>
+    <div class="filecard only-both">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">lint-SKILL.md</span><span class="badge b-both">공통</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('lint', this)">복사</button>
+          <button class="btn" onclick="downloadFile('lint','lint-SKILL.md')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">/lint 명령. ~/.claude/skills/lint/SKILL.md 에 둡니다.</p>
+      <pre class="code" id="code-lint"></pre>
+      <script type="text/plain" id="src-lint">---
+name: lint
+description: Use when the user says "/lint", "린트", "위키 점검", or wants a periodic health check of the knowledge wiki. Scans wiki/ for contradictions, orphan pages, stale claims, and missing links; lists findings; applies only approved fixes; logs changes; and suggests next research topics. Recommended weekly.
+---
+
+# /lint — 위키 건강검진 (주 1회 권장)
+
+위키가 커져도 일관성·최신성을 유지하기 위한 점검.
+
+## 절차
+1. `wiki/` 전체를 훑는다(특히 최근 `/ingest`된 내용 반영).
+2. 다음을 찾아 목록으로 정리한다:
+	- ⚠️ **모순** — 서로 상충하는 서술
+	- 📭 **고아 페이지** — 아무 데서도 링크되지 않는 페이지
+	- 🕒 **오래된 주장** — 새 자료로 뒤집힌 내용
+	- 🔗 **빠진 연결** — `[[위키링크]]`로 이어야 할 곳
+	- 🔍 **데이터 갭** — 위키에 비어 있는 중요한 주제
+3. 각 항목을 사람에게 보여주고 **승인받은 것만** 고친다.
+4. 고친 내용을 `wiki/log.md`에 기록한다.
+5. "다음에 조사하면 좋을 주제 3개"를 제안한다.
+
+## 원칙
+- 사람 승인 없이 대량 삭제하지 않는다.
+- 매주 한 번(예: 주간 리트로 하는 날)에 같이 돌리면 좋다.
+</script>
+    </div>
+
+  <hr class="sep">
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>주간 리트로(교훈 일지)랑 뭐가 다른가요?</summary>
+    <p>주간 리트로는 <b>내 작업 습관/교훈</b>을 쌓아 같은 실수를 막는 거고, LLM 위키는 <b>내가 읽고 모으는 외부 지식</b>을 쌓는 겁니다. 폴더도 따로 두는 걸 추천해요. 둘 다 "사람이 승인, AI가 정리"라는 같은 철학으로 움직입니다.</p>
+  </details>
+  <details>
+    <summary>꼭 개발 지식이어야 하나요?</summary>
+    <p>아니요. 업무 자료, 리서치, 관심 주제(예: 마케팅·투자·요리 레시피)도 똑같이 됩니다. raw에 넣고 /ingest 하면 됩니다.</p>
+  </details>
+  <details>
+    <summary>/lint 를 자동으로 돌릴 수 있나요?</summary>
+    <p>지금은 직접 <code class="inl">/lint</code> 를 입력하는 방식입니다(주 1회 권장). 앞 가이드의 '금요일 자동 점검' 알림을 받는 날 같이 돌리면 습관 들이기 좋아요.</p>
+  </details>
+  <details>
+    <summary>raw 자료가 사라지거나 바뀌면요?</summary>
+    <p>규약(CLAUDE.md)에 "AI는 raw를 절대 수정하지 않는다"가 박혀 있습니다. raw는 원본 보관소로만 쓰고, 정리물은 전부 wiki/에만 쌓입니다.</p>
+  </details>
+
+  <a class="backlink" href="./">← 주간 리트로 설치 가이드로 돌아가기</a>
+</div>
+
+<script>
+  function fillAll() {
+    document.querySelectorAll('pre.code[id^="code-"]').forEach(function(pre){
+      var id = pre.id.replace('code-',''); var src = document.getElementById('src-'+id);
+      if (src) pre.textContent = src.textContent.replace(/^\n/,'');
+    });
+  }
+  function srcText(id) { var s=document.getElementById('src-'+id); return s?s.textContent.replace(/^\n/,''):''; }
+  function copyFile(id, btn) {
+    navigator.clipboard.writeText(srcText(id)).then(function(){
+      if(btn){ var t=btn.textContent; btn.textContent='복사됨!'; btn.classList.add('copied');
+        setTimeout(function(){ btn.textContent=t; btn.classList.remove('copied'); },1400); }
+    });
+  }
+  function downloadFile(id, filename) {
+    var blob=new Blob([srcText(id)],{type:'text/plain;charset=utf-8'}); var url=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click();
+    document.body.removeChild(a); setTimeout(function(){ URL.revokeObjectURL(url); },1500);
+  }
+  function setOS(os) {
+    document.body.dataset.os=os;
+    document.getElementById('btn-mac').classList.toggle('active', os==='mac');
+    document.getElementById('btn-win').classList.toggle('active', os==='win');
+    document.getElementById('oshint').textContent = os==='mac' ? 'Mac 기준으로 표시 중' : 'Windows(PowerShell) 기준으로 표시 중';
+    try { localStorage.setItem('wr-os', os); } catch(e) {}
+  }
+  fillAll();
+  setOS((function(){ try { return localStorage.getItem('wr-os')||'mac'; } catch(e) { return 'mac'; } })());
+</script>
+<style>
+  body[data-os="mac"] .only-win { display:none !important; }
+  body[data-os="win"] .only-mac { display:none !important; }
+</style>
+</body>
+</html>

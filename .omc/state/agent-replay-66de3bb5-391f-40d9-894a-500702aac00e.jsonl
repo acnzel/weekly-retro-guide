@@ -8,3 +8,17 @@
 {"t":0,"agent":"ad10fb8","agent_type":"unknown","event":"agent_stop","success":true}
 {"t":0,"agent":"ad10fb8","agent_type":"unknown","event":"agent_stop","success":true}
 {"t":0,"agent":"ad10fb8","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"a74e47c","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"system","event":"skill_invoked","skill_name":"browse"}
+{"t":0,"agent":"a74e47c","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"a74e47c","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"a74e47c","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"a74e47c","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"a74e47c","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"a74e47c","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"a74e47c","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"a74e47c","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"a74e47c","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"a840720","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"a886ebe","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"system","event":"keyword_detected","keyword":"wiki"}

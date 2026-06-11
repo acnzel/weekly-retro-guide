@@ -949,6 +949,17 @@ Write-Host '   이제 Claude Code로 일하면 교훈이 쌓이고, 금요일에
 
   <hr class="sep">
 
+  <h2>다음 단계 — 내 지식이 쌓이는 위키 만들기</h2>
+  <a href="./llm-wiki.html" style="display:flex; align-items:center; justify-content:space-between; gap:16px; text-decoration:none; background:linear-gradient(135deg,#0e9f6e,#5b54e8); color:#fff; border-radius:14px; padding:20px 22px; margin:16px 0;">
+    <span style="flex:1">
+      <b style="font-size:17px; display:block; margin-bottom:4px">🧩 LLM Wiki 구축하기</b>
+      <span style="font-size:14px; opacity:.95">지금까지 '내 작업 교훈'을 쌓았다면, 이제 '내가 읽고 모으는 자료·지식'을 쌓을 차례. raw 폴더에 자료를 넣고 /ingest · /query · /lint 세 명령으로 나만의 백과사전을 키웁니다. (비개발자용 따라하기)</span>
+    </span>
+    <span style="font-size:28px">→</span>
+  </a>
+
+  <hr class="sep">
+
   <h2>개별 파일 (수동 설치용)</h2>
   <p class="muted">위 자동 설치 스크립트가 아래 파일들을 알아서 만들어 줍니다. 직접 살펴보거나 수동으로 설치하고 싶을 때만 사용하세요.
   <span class="only-mac">아래는 <span class="pill">Mac</span> 및 <span class="pill">공통</span> 파일입니다.</span>
@@ -1031,13 +1042,15 @@ def build_candidates(rows):
     for cat, slot in by_cat.items():
         recurring = len(slot["files"]) >= 2
         if recurring or slot["major"]:
-            candidates.append({
-                "category": cat,
-                "count": len(slot["files"]),
-                "major": slot["major"],
-                "recurring": recurring,
-                "evidence": slot["evidence"],
-            })
+            candidates.append(
+                {
+                    "category": cat,
+                    "count": len(slot["files"]),
+                    "major": slot["major"],
+                    "recurring": recurring,
+                    "evidence": slot["evidence"],
+                }
+            )
     candidates.sort(key=lambda c: (c["count"], c["major"]), reverse=True)
     return candidates
 
@@ -1052,13 +1065,7 @@ def open_guardrails(rows):
 
 
 def render_note(candidates, guardrails, today):
-    fm = (
-        "---\n"
-        "tags:\n"
-        "  - weekly-retro\n"
-        f"created: {today}\n"
-        "---\n\n"
-    )
+    fm = "---\n" "tags:\n" "  - weekly-retro\n" f"created: {today}\n" "---\n\n"
     lines = [f"# 주간 리트로 후보 — {today}\n"]
     lines.append(
         "> 자동 집계 결과입니다. Claude Code에서 `/weekly-retro` 를 실행해 "
@@ -1095,8 +1102,13 @@ def notify(title, message):
     try:
         if platform.system() == "Darwin":
             subprocess.run(
-                ["osascript", "-e", f'display notification "{message}" with title "{title}"'],
-                check=False, timeout=10,
+                [
+                    "osascript",
+                    "-e",
+                    f'display notification "{message}" with title "{title}"',
+                ],
+                check=False,
+                timeout=10,
             )
     except Exception:
         pass
@@ -1111,10 +1123,18 @@ def main():
     candidates = build_candidates(rows)
     guardrails = open_guardrails(rows)
     note = render_note(candidates, guardrails, today)
-    (directory / f"리뷰 대기 — 주간 리트로 {today}.md").write_text(note, encoding="utf-8")
+    (directory / f"리뷰 대기 — 주간 리트로 {today}.md").write_text(
+        note, encoding="utf-8"
+    )
     n = len(candidates)
-    notify("주간 리트로", f"승격 후보 {n}건 대기 중 — /weekly-retro 로 검토하세요" if n
-           else "이번 주 승격 후보 없음 👍")
+    notify(
+        "주간 리트로",
+        (
+            f"승격 후보 {n}건 대기 중 — /weekly-retro 로 검토하세요"
+            if n
+            else "이번 주 승격 후보 없음 👍"
+        ),
+    )
     return 0
 
 
