@@ -236,7 +236,7 @@ echo "→ 위키 폴더(지식 베이스): $KB_ROOT"
 
 SKILLS="$HOME/.claude/skills"
 echo "→ 폴더 구조 생성..."
-mkdir -p "$KB_ROOT/raw/assets" "$KB_ROOT/ingested" "$KB_ROOT/wiki/entities" "$KB_ROOT/wiki/concepts" "$KB_ROOT/wiki/sources" "$KB_ROOT/wiki/comparisons" "$SKILLS/ingest" "$SKILLS/query" "$SKILLS/lint"
+mkdir -p "$KB_ROOT/raw" "$KB_ROOT/ingested" "$KB_ROOT/wiki/entities" "$KB_ROOT/wiki/concepts" "$KB_ROOT/wiki/sources" "$KB_ROOT/wiki/comparisons" "$SKILLS/ingest" "$SKILLS/query" "$SKILLS/lint"
 
 echo "→ 위키 규약(CLAUDE.md)..."
 if [ ! -f "$KB_ROOT/CLAUDE.md" ]; then
@@ -448,7 +448,7 @@ Write-Host "-> 위키 폴더(지식 베이스): $KbRoot"
 
 $skills = Join-Path $env:USERPROFILE '.claude\skills'
 foreach ($d in @(
-    (Join-Path $KbRoot 'raw\assets'), (Join-Path $KbRoot 'ingested'),
+    (Join-Path $KbRoot 'raw'), (Join-Path $KbRoot 'ingested'),
     (Join-Path $KbRoot 'wiki\entities'), (Join-Path $KbRoot 'wiki\concepts'),
     (Join-Path $KbRoot 'wiki\sources'), (Join-Path $KbRoot 'wiki\comparisons'),
     (Join-Path $skills 'ingest'), (Join-Path $skills 'query'), (Join-Path $skills 'lint')
