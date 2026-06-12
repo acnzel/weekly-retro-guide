@@ -477,6 +477,58 @@ debrief 로그에 쌓인 교훈을 영구 규칙으로 졸업시키는 반자동
 - 게이트는 사람이 통제한다. 자동 기록 없음.
 WRS_SKILL
 
+echo "→ 상태 점검 스킬(loop-status) 설치..."
+mkdir -p "$CLAUDE_DIR/skills/loop-status"
+cat > "$CLAUDE_DIR/skills/loop-status/SKILL.md" <<'WRS_LOOPSTATUS'
+---
+name: loop-status
+description: Use when the user says "/loop-status", "상태", "루프 상태", "내 루프 잘 돌고 있어?", "대시보드", or wants a health check of their knowledge-base self-improvement loop. Reports vital signs — knowledge base folder, weekly scheduler, last scan, debrief flow (14 days), pending reviews, wiki size, raw backlog, promoted rules — and flags anything stale or broken with a concrete next action. Read-only: never changes or deletes anything.
+---
+
+# /loop-status — 내 루프 건강검진 대시보드
+
+비개발자가 "내 자가발전 루프가 살아있고 잘 도는가"를 한눈에 보게 한다.
+**읽기 전용 — 아무 파일도 만들거나 고치거나 지우지 않는다.** OS에 맞는 명령(mac/Windows)을 골라 쓴다.
+
+## 1. 기준 경로 확인
+- 루트: `~/.claude/knowledge-base.config` 첫 줄. 없으면 "아직 설치 안 됨"으로 안내하고 종료.
+- 교훈: `<루트>/debriefs/`, 위키: `<루트>/wiki/`, 원본: `<루트>/raw/`, 보관: `<루트>/ingested/`
+
+## 2. 생체신호 수집 (셸로 조용히 확인)
+- **스케줄 살아있나**: mac `launchctl print gui/$(id -u)/com.user.weekly-retro` 성공 여부 / Windows `Get-ScheduledTask -TaskName WeeklyRetro`
+- **마지막 자동 점검**: `~/.claude/logs/weekly-retro.out.log` 수정시각, 또는 `debriefs/`의 최신 `리뷰 대기 — 주간 리트로 *.md` 날짜
+- **교훈 흐름**: `debriefs/`의 최근 14일 `*-debrief.md` 개수
+- **미처리 리뷰**: `리뷰 대기 — 주간 리트로 *.md` 중 본문에 `처리 완료` 없는 것 개수
+- **위키 규모**: `wiki/`의 `*.md` 페이지 수
+- **처리 대기 자료**: `raw/`의 파일 수(README 제외), **보관됨**: `ingested/` 파일 수
+- **승격된 규칙**: `~/.claude/CLAUDE.md`의 `## 반복 교훈` 섹션 항목 수
+
+## 3. 대시보드 출력 (표 + 신호등)
+각 항목을 ✅(정상) / ⚠️(주의) / 🔔(할 일) / ❌(고장) 으로. 예:
+```
+🔍 내 루프 상태
+  ✅ 지식 베이스      /Users/.../MyBrain
+  ✅ 자동 점검 스케줄  매주 금 14:30 (마지막 실행: 3일 전)
+  🔔 검토 대기        승격 후보 2건 → /weekly-retro 실행
+  ✅ 교훈 흐름        최근 2주 5건
+  🔔 미처리 자료      raw에 3개 → /ingest 실행
+  ✅ 위키             24페이지 (보관 18)
+  ✅ 승격된 규칙      7개
+```
+
+## 4. 경고는 반드시 "행동 한 줄"과 함께
+- 스케줄 없음 → ❌ "자동 점검이 꺼져 있어요. 설치 스크립트를 다시 실행하세요."
+- 최근 14일 교훈 0건 → ⚠️ "교훈이 안 쌓이고 있어요. 작업 후 '오늘 debrief 정리해줘'라고 하거나, Code 탭+Local에서 일하고 있는지 확인하세요."
+- 미처리 리뷰 ≥1 → 🔔 "검토 대기 N건 — `/weekly-retro` 실행하세요."
+- raw 대기 ≥1 → 🔔 "ingest 안 한 자료 M개 — `/ingest` 하세요."
+- 위키 0페이지 & ingested 0 → ⚠️ "아직 위키를 안 쓰고 있어요. raw에 자료를 넣고 /ingest 해보세요."
+
+## 원칙
+- 절대 읽기 전용. 수정·삭제·생성 금지.
+- 모든 경고에 "무엇을 / 어떻게" 한 줄 행동지침을 붙인다.
+- 숫자만 나열하지 말고, "잘 돌고 있어요" 또는 "이건 챙기세요"를 한 줄 총평으로 마무리.
+WRS_LOOPSTATUS
+
 echo "→ CLAUDE.md 규약 추가..."
 touch "$CLAUDE_DIR/CLAUDE.md"
 if ! grep -qF "weekly-retro:debrief-convention" "$CLAUDE_DIR/CLAUDE.md" 2>/dev/null; then
@@ -580,6 +632,19 @@ echo "✅ 설치 완료!"
 echo "   교훈 폴더 : $VAULT_DEBRIEF_DIR"
 echo "   자동 점검 : 매주 (요일 $RETRO_WEEKDAY) ${RETRO_HOUR}:$(printf '%02d' "$RETRO_MINUTE")"
 echo "   이제 Claude Code로 일하면 교훈이 쌓이고, 금요일에 자동 점검됩니다."
+
+echo ""
+echo "── 설치 점검 ──"
+[ -d "$KB_ROOT" ] && echo "  ✅ 지식 베이스 폴더: $KB_ROOT" || echo "  ⚠️ 지식 베이스 폴더 없음"
+[ -d "$VAULT_DEBRIEF_DIR" ] && echo "  ✅ 교훈 일지(debriefs)" || echo "  ⚠️ debriefs 폴더 없음"
+if [ "${WR_SKIP_SCHEDULE:-0}" = "1" ]; then echo "  ⏭️  스케줄 등록 건너뜀(테스트)"
+elif launchctl print "gui/$(id -u)/com.user.weekly-retro" >/dev/null 2>&1; then echo "  ✅ 자동 점검 스케줄 (매주 금 ${RETRO_HOUR}:$(printf '%02d' "$RETRO_MINUTE"))"
+else echo "  ⚠️ 스케줄 미등록 — 스크립트를 다시 실행해 보세요"; fi
+grep -q "weekly-retro-session-start" "$CLAUDE_DIR/settings.json" 2>/dev/null && echo "  ✅ 세션 훅 연결됨(settings.json)" || echo "  ⚠️ 세션 훅 미연결"
+[ -f "$SKILLS_DIR/SKILL.md" ] && echo "  ✅ 스킬: weekly-retro" || echo "  ⚠️ weekly-retro 스킬 없음"
+[ -f "$CLAUDE_DIR/skills/loop-status/SKILL.md" ] && echo "  ✅ 스킬: loop-status (상태 점검)" || echo "  ⚠️ loop-status 스킬 없음"
+echo ""
+echo "  💡 언제든 Claude Code에서  /loop-status  로 루프가 잘 도는지 확인하세요."
 </script>
     </div>
     <div class="filecard only-win">
@@ -858,6 +923,60 @@ debrief 로그에 쌓인 교훈을 영구 규칙으로 졸업시키는 반자동
 '@
 Write-Utf8NoBom $skillPath $skill
 
+Write-Host '-> 상태 점검 스킬(loop-status) 설치...'
+$loopStatusDir = Join-Path $claude 'skills\loop-status'
+if (-not (Test-Path $loopStatusDir)) { New-Item -ItemType Directory -Path $loopStatusDir -Force | Out-Null }
+$loopstatus = @'
+---
+name: loop-status
+description: Use when the user says "/loop-status", "상태", "루프 상태", "내 루프 잘 돌고 있어?", "대시보드", or wants a health check of their knowledge-base self-improvement loop. Reports vital signs — knowledge base folder, weekly scheduler, last scan, debrief flow (14 days), pending reviews, wiki size, raw backlog, promoted rules — and flags anything stale or broken with a concrete next action. Read-only: never changes or deletes anything.
+---
+
+# /loop-status — 내 루프 건강검진 대시보드
+
+비개발자가 "내 자가발전 루프가 살아있고 잘 도는가"를 한눈에 보게 한다.
+**읽기 전용 — 아무 파일도 만들거나 고치거나 지우지 않는다.** OS에 맞는 명령(mac/Windows)을 골라 쓴다.
+
+## 1. 기준 경로 확인
+- 루트: `~/.claude/knowledge-base.config` 첫 줄. 없으면 "아직 설치 안 됨"으로 안내하고 종료.
+- 교훈: `<루트>/debriefs/`, 위키: `<루트>/wiki/`, 원본: `<루트>/raw/`, 보관: `<루트>/ingested/`
+
+## 2. 생체신호 수집 (셸로 조용히 확인)
+- **스케줄 살아있나**: mac `launchctl print gui/$(id -u)/com.user.weekly-retro` 성공 여부 / Windows `Get-ScheduledTask -TaskName WeeklyRetro`
+- **마지막 자동 점검**: `~/.claude/logs/weekly-retro.out.log` 수정시각, 또는 `debriefs/`의 최신 `리뷰 대기 — 주간 리트로 *.md` 날짜
+- **교훈 흐름**: `debriefs/`의 최근 14일 `*-debrief.md` 개수
+- **미처리 리뷰**: `리뷰 대기 — 주간 리트로 *.md` 중 본문에 `처리 완료` 없는 것 개수
+- **위키 규모**: `wiki/`의 `*.md` 페이지 수
+- **처리 대기 자료**: `raw/`의 파일 수(README 제외), **보관됨**: `ingested/` 파일 수
+- **승격된 규칙**: `~/.claude/CLAUDE.md`의 `## 반복 교훈` 섹션 항목 수
+
+## 3. 대시보드 출력 (표 + 신호등)
+각 항목을 ✅(정상) / ⚠️(주의) / 🔔(할 일) / ❌(고장) 으로. 예:
+```
+🔍 내 루프 상태
+  ✅ 지식 베이스      /Users/.../MyBrain
+  ✅ 자동 점검 스케줄  매주 금 14:30 (마지막 실행: 3일 전)
+  🔔 검토 대기        승격 후보 2건 → /weekly-retro 실행
+  ✅ 교훈 흐름        최근 2주 5건
+  🔔 미처리 자료      raw에 3개 → /ingest 실행
+  ✅ 위키             24페이지 (보관 18)
+  ✅ 승격된 규칙      7개
+```
+
+## 4. 경고는 반드시 "행동 한 줄"과 함께
+- 스케줄 없음 → ❌ "자동 점검이 꺼져 있어요. 설치 스크립트를 다시 실행하세요."
+- 최근 14일 교훈 0건 → ⚠️ "교훈이 안 쌓이고 있어요. 작업 후 '오늘 debrief 정리해줘'라고 하거나, Code 탭+Local에서 일하고 있는지 확인하세요."
+- 미처리 리뷰 ≥1 → 🔔 "검토 대기 N건 — `/weekly-retro` 실행하세요."
+- raw 대기 ≥1 → 🔔 "ingest 안 한 자료 M개 — `/ingest` 하세요."
+- 위키 0페이지 & ingested 0 → ⚠️ "아직 위키를 안 쓰고 있어요. raw에 자료를 넣고 /ingest 해보세요."
+
+## 원칙
+- 절대 읽기 전용. 수정·삭제·생성 금지.
+- 모든 경고에 "무엇을 / 어떻게" 한 줄 행동지침을 붙인다.
+- 숫자만 나열하지 말고, "잘 돌고 있어요" 또는 "이건 챙기세요"를 한 줄 총평으로 마무리.
+'@
+Write-Utf8NoBom (Join-Path $loopStatusDir 'SKILL.md') $loopstatus
+
 Write-Host '→ CLAUDE.md 규약 추가...'
 $snippet = @'
 
@@ -941,6 +1060,17 @@ Write-Host '✅ 설치 완료!'
 Write-Host "   교훈 폴더 : $VaultDebriefDir"
 Write-Host "   자동 점검 : 매주 $RetroDay ${RetroHour}:$('{0:D2}' -f $RetroMinute)"
 Write-Host '   이제 Claude Code로 일하면 교훈이 쌓이고, 금요일에 자동 점검됩니다.'
+
+Write-Host ''
+Write-Host '-- 설치 점검 --'
+if (Test-Path $KbRoot) { Write-Host "  [OK] 지식 베이스 폴더: $KbRoot" } else { Write-Host '  [!] 지식 베이스 폴더 없음' }
+if (Test-Path $VaultDebriefDir) { Write-Host '  [OK] 교훈 일지(debriefs)' } else { Write-Host '  [!] debriefs 폴더 없음' }
+if (Get-ScheduledTask -TaskName WeeklyRetro -ErrorAction SilentlyContinue) { Write-Host '  [OK] 자동 점검 스케줄 (매주 금요일)' } else { Write-Host '  [!] 스케줄 미등록 — 관리자 PowerShell에서 다시 실행' }
+if ((Test-Path $settingsPath) -and (Select-String -Path $settingsPath -Pattern 'weekly-retro-session-start' -Quiet)) { Write-Host '  [OK] 세션 훅 연결됨(settings.json)' } else { Write-Host '  [!] 세션 훅 미연결' }
+if (Test-Path $skillPath) { Write-Host '  [OK] 스킬: weekly-retro' } else { Write-Host '  [!] weekly-retro 스킬 없음' }
+if (Test-Path (Join-Path $claude 'skills\loop-status\SKILL.md')) { Write-Host '  [OK] 스킬: loop-status (상태 점검)' } else { Write-Host '  [!] loop-status 스킬 없음' }
+Write-Host ''
+Write-Host '  TIP: 언제든 Claude Code에서  /loop-status  로 루프 상태를 확인하세요.'
 </script>
     </div>
     </div>
@@ -965,6 +1095,7 @@ Write-Host '   이제 Claude Code로 일하면 교훈이 쌓이고, 금요일에
           <li><b>평소:</b> Claude의 <b>Code 탭(내 컴퓨터·Local)</b>에서 일하세요. 의미 있는 작업을 마치면 AI가 일지에 교훈을 자동 기록합니다. (원하면 <code class="inl">오늘 작업 debrief 정리해줘</code> 라고 직접 시켜도 됩니다.)</li>
           <li><b>금요일 14:30:</b> 컴퓨터가 자동으로 반복 교훈을 모아 알림을 띄웁니다. (Claude를 켜두지 않아도 됩니다.)</li>
           <li><b>검토:</b> Code 탭을 열면 "리뷰 대기 후보가 있다"고 알려줍니다. 입력창에 <code class="inl">/</code> 를 입력하고 <b>weekly-retro</b> 를 골라 실행 → 후보를 보고 <b>승인/기각</b>만 하면, 승인한 교훈이 영구 규칙이 됩니다. <span class="muted">(<a href="./llm-wiki.html">LLM Wiki</a>도 설치했다면 이 날 <code class="inl">/lint</code>로 위키도 함께 점검하세요 — 주간 정비를 한 번에.)</span></li>
+          <li><b>상태 점검:</b> 언제든 <code class="inl">/loop-status</code> 를 실행하면 "내 루프가 잘 돌고 있나"(자동 점검 스케줄·교훈 흐름·미처리 리뷰·위키 규모)를 한눈에 보여주고, 챙길 게 있으면 알려줍니다. <span class="muted">— "시작 버튼만 누르는 사람"이 아니라 루프를 지켜보는 사람이 되는 창구.</span></li>
         </ul>
         <div class="callout warn" style="margin-top:6px">⚠️ 작동 조건: 반드시 <b>Code 탭 + 내 컴퓨터(Local)</b>. Chat 탭이나 클라우드(Remote)에서는 일지 기록·<code class="inl">/weekly-retro</code>가 동작하지 않습니다.</div>
       </div>
@@ -1458,6 +1589,65 @@ debrief 로그에 쌓인 교훈을 영구 규칙으로 졸업시키는 반자동
 
 ## 반복 교훈 (Lessons)
 <!-- /weekly-retro 가 승인한 반복 교훈이 여기에 누적됩니다. 매 세션 자동으로 읽힙니다. -->
+</script>
+    </div>
+    <div class="filecard only-both">
+      <div class="fhead">
+        <div class="fmeta"><span class="fname">loop-status-SKILL.md</span><span class="badge b-both">공통</span></div>
+        <div class="factions">
+          <button class="btn" onclick="copyFile('loop-status', this)">복사</button>
+          <button class="btn" onclick="downloadFile('loop-status','loop-status-SKILL.md')">다운로드</button>
+        </div>
+      </div>
+      <p class="fdesc">루프 상태 점검 스킬. ~/.claude/skills/loop-status/SKILL.md 에 둡니다. Claude Code에서 /loop-status 로 실행하면 루프 건강검진 대시보드를 보여줍니다.</p>
+      <pre class="code" id="code-loop-status"></pre>
+      <script type="text/plain" id="src-loop-status">---
+name: loop-status
+description: Use when the user says "/loop-status", "상태", "루프 상태", "내 루프 잘 돌고 있어?", "대시보드", or wants a health check of their knowledge-base self-improvement loop. Reports vital signs — knowledge base folder, weekly scheduler, last scan, debrief flow (14 days), pending reviews, wiki size, raw backlog, promoted rules — and flags anything stale or broken with a concrete next action. Read-only: never changes or deletes anything.
+---
+
+# /loop-status — 내 루프 건강검진 대시보드
+
+비개발자가 "내 자가발전 루프가 살아있고 잘 도는가"를 한눈에 보게 한다.
+**읽기 전용 — 아무 파일도 만들거나 고치거나 지우지 않는다.** OS에 맞는 명령(mac/Windows)을 골라 쓴다.
+
+## 1. 기준 경로 확인
+- 루트: `~/.claude/knowledge-base.config` 첫 줄. 없으면 "아직 설치 안 됨"으로 안내하고 종료.
+- 교훈: `<루트>/debriefs/`, 위키: `<루트>/wiki/`, 원본: `<루트>/raw/`, 보관: `<루트>/ingested/`
+
+## 2. 생체신호 수집 (셸로 조용히 확인)
+- **스케줄 살아있나**: mac `launchctl print gui/$(id -u)/com.user.weekly-retro` 성공 여부 / Windows `Get-ScheduledTask -TaskName WeeklyRetro`
+- **마지막 자동 점검**: `~/.claude/logs/weekly-retro.out.log` 수정시각, 또는 `debriefs/`의 최신 `리뷰 대기 — 주간 리트로 *.md` 날짜
+- **교훈 흐름**: `debriefs/`의 최근 14일 `*-debrief.md` 개수
+- **미처리 리뷰**: `리뷰 대기 — 주간 리트로 *.md` 중 본문에 `처리 완료` 없는 것 개수
+- **위키 규모**: `wiki/`의 `*.md` 페이지 수
+- **처리 대기 자료**: `raw/`의 파일 수(README 제외), **보관됨**: `ingested/` 파일 수
+- **승격된 규칙**: `~/.claude/CLAUDE.md`의 `## 반복 교훈` 섹션 항목 수
+
+## 3. 대시보드 출력 (표 + 신호등)
+각 항목을 ✅(정상) / ⚠️(주의) / 🔔(할 일) / ❌(고장) 으로. 예:
+```
+🔍 내 루프 상태
+  ✅ 지식 베이스      /Users/.../MyBrain
+  ✅ 자동 점검 스케줄  매주 금 14:30 (마지막 실행: 3일 전)
+  🔔 검토 대기        승격 후보 2건 → /weekly-retro 실행
+  ✅ 교훈 흐름        최근 2주 5건
+  🔔 미처리 자료      raw에 3개 → /ingest 실행
+  ✅ 위키             24페이지 (보관 18)
+  ✅ 승격된 규칙      7개
+```
+
+## 4. 경고는 반드시 "행동 한 줄"과 함께
+- 스케줄 없음 → ❌ "자동 점검이 꺼져 있어요. 설치 스크립트를 다시 실행하세요."
+- 최근 14일 교훈 0건 → ⚠️ "교훈이 안 쌓이고 있어요. 작업 후 '오늘 debrief 정리해줘'라고 하거나, Code 탭+Local에서 일하고 있는지 확인하세요."
+- 미처리 리뷰 ≥1 → 🔔 "검토 대기 N건 — `/weekly-retro` 실행하세요."
+- raw 대기 ≥1 → 🔔 "ingest 안 한 자료 M개 — `/ingest` 하세요."
+- 위키 0페이지 & ingested 0 → ⚠️ "아직 위키를 안 쓰고 있어요. raw에 자료를 넣고 /ingest 해보세요."
+
+## 원칙
+- 절대 읽기 전용. 수정·삭제·생성 금지.
+- 모든 경고에 "무엇을 / 어떻게" 한 줄 행동지침을 붙인다.
+- 숫자만 나열하지 말고, "잘 돌고 있어요" 또는 "이건 챙기세요"를 한 줄 총평으로 마무리.
 </script>
     </div>
 
