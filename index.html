@@ -227,7 +227,7 @@
   <div class="callout"><b>핵심 원칙.</b> 한 번 한 실수는 규칙으로 안 만듭니다(괜한 잔소리 방지). 두 번째로 반복됐을 때 비로소 후보가 돼요. 단, 되돌리기 힘든 치명적 실수는 한 번이라도 올립니다. (위키의 <code class="inl">/lint</code>·<code class="inl">/ingest</code>도 똑같이 '사람이 승인하는' 방식으로 움직여요.)</div>
 
   <h2>어디서 써야 작동하나요? <span class="muted" style="font-size:14px">(꼭 확인하세요)</span></h2>
-  <p>이 세트는 <b>Claude Code</b>에서 돌아갑니다. <b>Claude Desktop 앱</b>을 쓴다면 앱 안 세 탭(Chat · Cowork · <b>Code</b>) 중에서 꼭 <b>Code 탭</b>을, 환경은 <b>"내 컴퓨터(Local)"</b>로 골라야 해요.</p>
+  <p>이 세트는 <b>Claude Code</b>에서 돌아갑니다. <b>Claude Desktop 앱</b>을 쓴다면 앱 안의 여러 탭 중에서 꼭 <b>Code 탭</b>을, 환경은 <b>"내 컴퓨터(Local)"</b>로 골라야 해요. (일반 대화 탭이 아닙니다.)</p>
   <div class="card">
     <table class="faq">
       <tr><td>✅</td><td><b>Claude Desktop 앱 → Code 탭 (Local)</b><br><span class="muted">CLI와 똑같은 <code class="inl">~/.claude</code> 설정·스킬·훅을 공유하고 내 컴퓨터 파일에 접근해요. 터미널 없이 GUI로 쓰니 <b>비개발자에게 추천</b>합니다.</span></td></tr>
@@ -237,6 +237,11 @@
       <tr><td>⏰</td><td><b>매주 자동 점검(스캔)</b><br><span class="muted">이건 늘 돕니다. 내 컴퓨터 스케줄러가 돌리니 Claude를 켜두지 않아도 돼요.</span></td></tr>
     </table>
   </div>
+
+  <div class="callout info">🗂️ <b>어디에 쌓이나 — 둘은 저장 방식이 다릅니다.</b>
+    <br>· <b>교훈·규칙</b>은 <b>전역</b>이에요. 설정에 적힌 지식 베이스 폴더 <b>한 곳</b>에 모이고, 어느 프로젝트 창에서 일하든 그리로 갑니다.
+    <br>· <b>위키 지식</b>은 <b>연 폴더 기준(지역)</b>이에요. Claude Code로 <b>지금 연 폴더</b>의 <code class="inl">wiki/</code>에 쌓여서, 다른 폴더를 열면 위키도 따로 생깁니다.
+    <br>→ 그래서 위 그림처럼 <b>지식 베이스 폴더 하나를 열고 거기서 쓰면</b> 둘이 같은 곳에 모여 제일 단순해요. 여러 프로젝트를 오갈 때 어떻게 되는지는 아래 FAQ에서 자세히 다룹니다.</div>
 
   <hr class="sep">
 
