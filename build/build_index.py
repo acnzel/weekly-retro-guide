@@ -356,6 +356,55 @@ TEMPLATE = r"""<!DOCTYPE html>
   <h2>이게 뭐예요?</h2>
   <p class="lead">AI와 일하다 보면 두 가지가 그냥 날아가 버려요. 내가 얻은 교훈, 그리고 내가 읽고 모은 지식이요.
   이 세트는 그 둘을 같은 폴더 한 곳에 차곡차곡 쌓습니다. 쓰면 쓸수록 나도 AI도 똑똑해지고요.</p>
+
+  <div class="card" style="padding:14px 16px">
+  <svg role="img" aria-label="시스템 맵: 나는 자료를 넣고 질문하고, Claude Code와 Obsidian이 같은 지식 폴더(raw·wiki·debriefs)를 공유한다" viewBox="0 0 720 360" width="100%" style="max-width:720px;height:auto;display:block;margin:0 auto" font-family="-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
+    <title>한 폴더를 두 앱이 공유하는 구조</title>
+    <defs>
+      <marker id="wm-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#9aa1ad"/>
+      </marker>
+    </defs>
+    <!-- 나 -->
+    <rect x="266" y="14" width="188" height="36" rx="18" fill="#ffffff" stroke="#e6e8ef"/>
+    <text x="360" y="37" text-anchor="middle" font-size="13.5" fill="#1f2330">🙂 나 · 자료를 넣고, 질문해요</text>
+    <line x1="360" y1="50" x2="360" y2="90" stroke="#9aa1ad" stroke-width="1.5" marker-end="url(#wm-ah)"/>
+    <!-- 폴더 컨테이너 -->
+    <rect x="58" y="92" width="604" height="122" rx="14" fill="#fbfcff" stroke="#d9d7fb"/>
+    <text x="78" y="116" font-size="13" font-weight="700" fill="#1f2330">📂 내 지식 폴더 · 한 곳에 모입니다</text>
+    <!-- raw -->
+    <rect x="84" y="134" width="168" height="60" rx="10" fill="#f0fbf6" stroke="#cfe9dd"/>
+    <text x="168" y="160" text-anchor="middle" font-size="14" font-weight="700" fill="#0a7a52">raw/</text>
+    <text x="168" y="180" text-anchor="middle" font-size="11.5" fill="#6b7280">내가 넣는 원본</text>
+    <!-- 정리 화살표 -->
+    <line x1="252" y1="164" x2="284" y2="164" stroke="#9aa1ad" stroke-width="1.5" marker-end="url(#wm-ah)"/>
+    <!-- wiki -->
+    <rect x="286" y="134" width="168" height="60" rx="10" fill="#f4f3fe" stroke="#d9d7fb"/>
+    <text x="370" y="160" text-anchor="middle" font-size="14" font-weight="700" fill="#4b46c9">wiki/</text>
+    <text x="370" y="180" text-anchor="middle" font-size="11.5" fill="#6b7280">AI가 정리해서 채움</text>
+    <!-- debriefs -->
+    <rect x="468" y="134" width="168" height="60" rx="10" fill="#f6f7fb" stroke="#e6e8ef"/>
+    <text x="552" y="160" text-anchor="middle" font-size="14" font-weight="700" fill="#1f2330">debriefs/</text>
+    <text x="552" y="180" text-anchor="middle" font-size="11.5" fill="#6b7280">작업 교훈 일지</text>
+    <!-- 앱 화살표 (양방향) -->
+    <line x1="202" y1="256" x2="202" y2="214" stroke="#9aa1ad" stroke-width="1.5" marker-start="url(#wm-ah)" marker-end="url(#wm-ah)"/>
+    <rect x="150" y="226" width="104" height="17" rx="4" fill="#ffffff"/>
+    <text x="202" y="238" text-anchor="middle" font-size="11" fill="#5b54e8">/ingest · /query</text>
+    <line x1="518" y1="256" x2="518" y2="214" stroke="#9aa1ad" stroke-width="1.5" marker-start="url(#wm-ah)" marker-end="url(#wm-ah)"/>
+    <rect x="476" y="226" width="84" height="17" rx="4" fill="#ffffff"/>
+    <text x="518" y="238" text-anchor="middle" font-size="11" fill="#0a7a52">열어서 봄</text>
+    <!-- Claude Code -->
+    <rect x="70" y="258" width="264" height="72" rx="12" fill="#ffffff" stroke="#5b54e8" stroke-width="1.5"/>
+    <text x="202" y="288" text-anchor="middle" font-size="14" font-weight="700" fill="#1f2330">🧠 Claude Code</text>
+    <text x="202" y="309" text-anchor="middle" font-size="11.5" fill="#6b7280">Code 탭·Local — 읽고 씁니다 (엔진)</text>
+    <!-- Obsidian -->
+    <rect x="386" y="258" width="264" height="72" rx="12" fill="#ffffff" stroke="#0e9f6e" stroke-width="1.5"/>
+    <text x="518" y="288" text-anchor="middle" font-size="14" font-weight="700" fill="#1f2330">📝 Obsidian</text>
+    <text x="518" y="309" text-anchor="middle" font-size="11.5" fill="#6b7280">노트 앱 — 보고 넣습니다</text>
+  </svg>
+  <p class="muted" style="margin:10px 2px 0;text-align:center">두 앱이 <b>같은 폴더</b>를 공유합니다. Claude Code가 정리하고, 나는 Obsidian에서 봐요.</p>
+  </div>
+
   <div class="twocol">
     <div class="box raw">
       <b>교훈 루프</b> <span class="pill">Part A · 기본</span>
