@@ -377,6 +377,32 @@ TEMPLATE = r"""<!DOCTYPE html>
   </div>
   <div class="callout info">📌 <b>읽는 순서.</b> 공통 준비를 먼저 하세요. Part A(교훈 루프)까지만 해도 충분히 쓸 만합니다. Part B(지식 위키)는 원할 때 같은 폴더에 이어서 더하면 돼요.</div>
 
+  <h2>왜 이게 통하나 — AI 잘 쓰는 4가지</h2>
+  <p>설치보다 이게 먼저예요. 도구가 아니라 <b>원리</b>를 알면, 이 세트를 넘어 어디서든 AI를 잘 부립니다.</p>
+  <div class="card">
+    <ol>
+      <li><b>AI는 당신을 기억하지 못합니다.</b> 새 대화는 늘 백지에서 시작해요. 그래서 읽힐 맥락(CLAUDE.md·위키·일지)을 <b>내가 만들어 두고 다시 먹여야</b> 합니다. 이 세트가 하는 일이 바로 그 '외장 기억'을 쌓는 거예요.</li>
+      <li><b>버리는 대화와 쌓이는 자산은 다릅니다.</b> 그냥 채팅은 끝나면 사라지죠. 정리해서 파일로 남기면 다음 번이 그 위에서 시작합니다. 지식이 복리로 붙어요.</li>
+      <li><b>사람이 승인하고, AI가 노동합니다.</b> AI가 멋대로 규칙을 만들거나 지우지 않아요. 후보를 보여주면 당신이 고릅니다. 통제가 있으니 믿고 맡길 수 있고요.</li>
+      <li><b>루프엔 리듬과 게이트가 필요합니다.</b> 만들고(기록·수집) → 돌아보고(점검) → 추리고(승인) → 적용. 이 한 바퀴를 주기적으로 돌릴 때만 자랍니다.</li>
+    </ol>
+    <p class="muted">하나만 기억한다면: <b>루프는 입력이 좋아야 복리가 됩니다.</b> 대충 쌓으면 대충 자라요. 그래서 아래 각 단계마다 '좋은 입력' 요령을 같이 적어 뒀습니다.</p>
+  </div>
+
+  <h2>한 달 뒤엔 이렇게 됩니다</h2>
+  <p>처음 1~2주는 티가 잘 안 나요. 복리라서 그렇습니다. 쌓이면 이런 게 생겨요.</p>
+  <div class="twocol">
+    <div class="box raw">
+      <b>교훈 루프 → 승격된 규칙 (예시)</b>
+      <p class="muted" style="margin:6px 0 0">내 CLAUDE.md에 이런 한 줄이 늘어갑니다.<br><code class="inl">- 보고서 초안은 항상 '결론 먼저' 구조로 쓴다 #promoted</code><br>그다음부터 AI가 알아서 이 방식을 지켜요.</p>
+    </div>
+    <div class="box wiki">
+      <b>지식 위키 → 자란 페이지 (예시)</b>
+      <p class="muted" style="margin:6px 0 0"><code class="inl">wiki/entities/거래처A.md</code> 안에 미팅·결정·연락이 분기별로 쌓이고, <code class="inl">/query "거래처A 그동안 흐름 정리"</code> 한 줄에 타임라인으로 답이 나옵니다.</p>
+    </div>
+  </div>
+  <p class="muted">그래서 초반엔 결과보다 <b>리듬</b>이 중요해요. 눈에 안 보여도 2~3주는 그냥 굴려 보세요. <code class="inl">/loop-status</code>로 "잘 돌고 있나"만 가끔 확인하면 됩니다.</p>
+
   <h2>어떻게 작동하나요? <span class="muted" style="font-size:14px">(교훈 루프 기준)</span></h2>
   <div class="flow">
     <div class="step"><div class="ic">✍️</div><div><b>1. 기록</b><span>Claude Code가 일을 끝내면 '교훈'을 일지에 자동으로 적습니다 (작은 #태그와 함께).</span></div></div>
@@ -490,6 +516,7 @@ TEMPLATE = r"""<!DOCTYPE html>
           <li><b>검토할 때는</b> Code 탭을 엽니다. "리뷰 대기 후보가 있다"고 알려주면, 입력창에 <code class="inl">/</code> 를 치고 <b>weekly-retro</b> 를 골라 실행하세요. 후보를 보고 승인/기각만 하면 승인한 교훈이 영구 규칙이 됩니다.</li>
           <li><b>상태가 궁금하면</b> 언제든 <code class="inl">/loop-status</code> 를 실행하세요. 자동 점검 스케줄·교훈 흐름·미처리 리뷰·위키 규모를 한눈에 보여줍니다. <span class="muted">시작 버튼만 누르고 잊는 게 아니라 루프를 지켜보는 창구예요.</span></li>
         </ul>
+        <p class="muted" style="margin-top:8px">💡 <b>좋은 일지가 좋은 규칙을 만듭니다.</b> 교훈은 "무엇을 했다"가 아니라 <b>"무엇이 어긋났고, 다음엔 어떻게"</b>를 한 줄로 남기세요. 그래야 2주 뒤 승격할 거리가 생깁니다.</p>
         <div class="callout warn" style="margin-top:6px">⚠️ 작동 조건. 반드시 <b>Code 탭 + 내 컴퓨터(Local)</b>여야 해요. Chat 탭이나 클라우드(Remote)에서는 일지 기록도 <code class="inl">/weekly-retro</code>도 동작하지 않습니다.</div>
       </div>
     </div>
@@ -536,13 +563,14 @@ TEMPLATE = r"""<!DOCTYPE html>
       <li>파일 이름은 <code class="inl">2026-06-11-기사제목.md</code>처럼 날짜로 시작하면 정리가 쉬워요(권장).</li>
     </ul>
     <span class="muted">raw에 넣기만 하면 끝이에요. 정리는 다음 <code class="inl">/ingest</code> 한 번으로 AI가 합니다.</span>
+    <p class="muted" style="margin:10px 0 0">💡 <b>아무거나 넣지 마세요.</b> 나중에 다시 찾고 싶은 것만 넣습니다. 잡다하게 쌓으면 위키도 잡다해져요. 한 달 뒤 "이건 왜 넣었지?" 싶을 자료는 그냥 패스.</p>
   </div>
 
   <h3>명령은 딱 세 개</h3>
   <div class="card">
     <div class="cmd"><span class="tag">/ingest</span><div><b>자료 넣기</b><br><span class="muted">raw에 넣은 자료를 위키로 정리해요. 관련 페이지를 한꺼번에 갱신하고 기록을 남깁니다. 내용이 충돌하면 ⚠️로 표시하고요. 처리한 원본은 raw에서 <code class="inl">ingested/</code>로 옮겨 둬서, 뭐가 처리됐는지 한눈에 보입니다(삭제 아님).</span><br><span class="muted">예) <code class="inl">raw/2026-06-11-기사.md 를 /ingest 해줘</code></span></div></div>
     <hr class="sep" style="margin:16px 0">
-    <div class="cmd"><span class="tag">/query</span><div><b>물어보기</b><br><span class="muted">위키를 근거로 답해요. 어느 페이지에서 나왔는지 알려주고, 쓸 만한 답은 위키에 저장할지 물어봅니다.</span><br><span class="muted">예) <code class="inl">/query GPT-5가 시장에 줄 영향 정리해줘</code></span></div></div>
+    <div class="cmd"><span class="tag">/query</span><div><b>물어보기</b><br><span class="muted">위키를 근거로 답해요. 어느 페이지에서 나왔는지 알려주고, 쓸 만한 답은 위키에 저장할지 물어봅니다.</span><br><span class="muted">예) <code class="inl">/query GPT-5가 시장에 줄 영향 정리해줘</code></span><br><span class="muted">💡 좋은 질문이 좋은 답을 부릅니다. "요약해줘"보다 <b>"A와 B를 표로 비교해줘"</b>, <b>"지난달 대비 뭐가 바뀌었어?"</b>처럼 <b>종합·비교</b>를 시키면 위키의 진짜 값이 나와요. 답의 출처 페이지는 한 번 눈으로 확인하고요.</span></div></div>
     <hr class="sep" style="margin:16px 0">
     <div class="cmd"><span class="tag">/lint</span><div><b>점검(주 1회)</b><br><span class="muted">모순·외톨이 페이지·빠진 연결·오래된 내용을 찾아 보여줘요. 그중 승인한 것만 고칩니다. "다음에 조사할 주제"도 제안하고요.</span><br><span class="muted">예) <code class="inl">/lint</code>, 교훈 루프 점검하는 날 같이 돌리면 좋아요.</span></div></div>
   </div>
