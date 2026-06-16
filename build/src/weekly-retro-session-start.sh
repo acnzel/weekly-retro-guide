@@ -23,7 +23,8 @@ if [ -n "$CONTENT" ]; then
   echo "최근 세션 교훈/가드레일 — 같은 실수 반복 금지:"
   printf "%b\n" "$CONTENT"
 fi
-PENDING=$(find "$DIR" -name "리뷰 대기 — 주간 리트로 *.md" 2>/dev/null | sort -r | head -1)
+# 처리 완료된 리뷰 노트는 retro-archive/ 로 이동되므로 top-level(-maxdepth 1)만 스캔한다
+PENDING=$(find "$DIR" -maxdepth 1 -name "리뷰 대기 — 주간 리트로 *.md" 2>/dev/null | sort -r | head -1)
 if [ -n "$PENDING" ] && ! grep -q "처리 완료" "$PENDING" 2>/dev/null; then
   echo ""
   echo "[WEEKLY RETRO PENDING] 미처리 주간 리트로 후보가 있습니다: $(basename "$PENDING")"
