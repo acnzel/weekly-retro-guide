@@ -2824,6 +2824,15 @@ description: Use when the user says "/loop-status", "상태", "루프 상태", "
     <p>교훈 루프는 <b>내가 일하며 얻은 교훈</b>을 쌓아 같은 실수를 막아요. 지식 위키는 <b>내가 읽고 모으는 외부 지식</b>을 쌓고요. 같은 폴더에 있어도 <b>섞지는 않습니다</b>. 하나는 주관적 경험, 하나는 출처 있는 지식이라 성격이 다르거든요. 둘 다 "사람이 승인하고 AI가 정리한다"는 똑같은 방식으로 움직입니다.</p>
   </details>
   <details>
+    <summary>프로젝트마다 다른 폴더에서 쓰면 위키가 나뉘나요?</summary>
+    <p>두 시스템이 저장 방식이 달라요. 이걸 모르면 헷갈리기 쉬우니 꼭 확인하세요.</p>
+    <table class="faq">
+      <tr><td><b>위키 지식</b><br><span class="muted">/ingest·/query</span></td><td><b>지금 연 폴더 기준</b>입니다. Claude Code로 연 폴더의 <code class="inl">wiki/</code>에 저장돼요. 그래서 프로젝트 폴더를 따로따로 열고 ingest하면 <b>위키도 폴더마다 따로 쌓이고, 자동으로 합쳐지지 않습니다.</b></td></tr>
+      <tr><td><b>교훈·규칙</b><br><span class="muted">debrief·/weekly-retro</span></td><td><b>한 곳에 모입니다.</b> 설정(<code class="inl">~/.claude/weekly-retro.config</code>)에 적힌 지식 베이스 폴더로 갑니다. 어느 프로젝트 창에서 일하든 교훈은 자동으로 그 한 곳에 쌓여요.</td></tr>
+    </table>
+    <p><b>위키를 하나로 키우고 싶다면, 지식 베이스 폴더를 하나 정해 두고 <code class="inl">/ingest</code>·<code class="inl">/query</code>는 그 폴더를 연 창에서</b> 하세요. 프로젝트 코딩은 각 폴더에서 따로 해도 됩니다(교훈은 어차피 중앙으로 모여요). 프로젝트에서 나온 자료를 중앙 위키에 넣고 싶으면, 그 자료를 중앙 폴더의 <code class="inl">raw/</code>(예: <code class="inl">raw/projectA/</code>)에 넣고 거기서 ingest하면 됩니다.</p>
+  </details>
+  <details>
     <summary>꼭 둘 다 설치해야 하나요?</summary>
     <p>아니요. <b>Part A(교훈 루프)만</b> 써도 충분합니다. 읽은 자료까지 쌓고 싶을 때 Part B를 같은 폴더에 더하면 됩니다. 반대로 위키만 쓰고 싶어도 됩니다(설치 스크립트가 분리돼 있어요).</p>
   </details>
