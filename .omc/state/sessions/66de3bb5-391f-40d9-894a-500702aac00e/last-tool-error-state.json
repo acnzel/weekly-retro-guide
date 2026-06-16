@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"sleep 8; echo \\\"=== 출력 전체 ===\\\"; cat /private/tmp/claude-501/-Users-beobjoongkim-Workspace/9d870b39-e94a-4e5d-8397-a72d4b365e16/tasks/bwxoj8kfi.output 2>/dev/null; echo \\\"=== project.json ...",
-  "error": "Exit code 1\n=== 출력 전체 ===\n=== Vercel 스코프/팀 ===\n<claude-code-hint v=\"1\" type=\"plugin\" value=\"vercel@claude-plugins-official\" />\n> No existing credentials found. Starting login flow...\n> \n  Visit https://vercel.com/oauth/device?user_code=BQNH-WPZW\n\nWaiting for authentication...\n\u001b[2K\u001b[1A\u001b[2K\u001b[G\n  Congratulations! You are now signed in.\n\n  To deploy something, run `vercel`.\n\n=== 프로젝트 링크(기본값) ===\n=== project.json 존재? ===\ncat: /Users/beobjoongkim/Workspace/weekly-retro-guide/.vercel/project.json: No s...",
-  "timestamp": "2026-06-10T09:50:55.143Z",
-  "retry_count": 1
-}
