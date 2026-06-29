@@ -46,3 +46,18 @@ if ($pending.Count -gt 0) {
         if (Test-Path (Join-Path (Split-Path $dir -Parent) 'wiki')) { Write-Output '   (주간 정비: 위키도 /lint 로 함께 점검하면 좋습니다 — 한 번에.)' }
     }
 }
+# 금요일 첫 실행 게이트: 매주 금요일, 그날 첫 세션에서 1회만 주간 리트로 실행 여부를 묻는다.
+# 하루 한 번만 발동하도록 날짜 마커 파일로 가드(= "처음 실행" 의미). 후보 유무와 무관하게 항상 묻는다.
+if ((Get-Date).DayOfWeek -eq 'Friday') {
+    $claudeDir = Join-Path $env:USERPROFILE '.claude'
+    $askMarker = Join-Path $claudeDir ('.weekly-retro-asked-' + (Get-Date -Format 'yyyy-MM-dd'))
+    if (-not (Test-Path -LiteralPath $askMarker)) {
+        New-Item -ItemType File -Path $askMarker -Force | Out-Null   # 오늘 마커 생성 → 같은 날 이후 세션에선 다시 묻지 않음
+        Get-ChildItem -LiteralPath $claudeDir -Filter '.weekly-retro-asked-*' -File -Force |
+            Where-Object { $_.Name -ne (Split-Path $askMarker -Leaf) } | Remove-Item -Force   # 옛 마커 정리
+        Write-Output ''
+        Write-Output '[WEEKLY RETRO — 금요일 첫 실행]'
+        Write-Output '→ 사용자에게 물어볼 것: "오늘 금요일입니다. 주간 리트로(/weekly-retro)를 지금 돌릴까요?"'
+        Write-Output '  사용자가 예라고 하면 /weekly-retro 를 실행. 아니라고 하면 넘어갈 것 (오늘은 다시 묻지 않음).'
+    }
+}
