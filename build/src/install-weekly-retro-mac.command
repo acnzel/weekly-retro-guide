@@ -236,6 +236,19 @@ if [ -n "$PENDING" ] && ! grep -q "처리 완료" "$PENDING" 2>/dev/null; then
   echo "→ 사용자에게 /weekly-retro 실행을 제안할 것."
   [ -d "$(dirname "$DIR")/wiki" ] && echo "   (주간 정비: 위키도 /lint 로 함께 점검하면 좋습니다 — 한 번에.)"
 fi
+# 금요일 첫 실행 게이트: 매주 금요일, 그날 첫 세션에서 1회만 주간 리트로 실행 여부를 묻는다.
+# 하루 한 번만 발동하도록 날짜 마커 파일로 가드(= "처음 실행" 의미). 후보 유무와 무관하게 항상 묻는다.
+if [ "$(date +%u)" = "5" ]; then
+  ASK_MARKER="$HOME/.claude/.weekly-retro-asked-$(date +%F)"
+  if [ ! -f "$ASK_MARKER" ]; then
+    : > "$ASK_MARKER"          # 오늘 마커 생성 → 같은 날 이후 세션에선 다시 묻지 않음
+    find "$HOME/.claude" -maxdepth 1 -name '.weekly-retro-asked-*' ! -name "$(basename "$ASK_MARKER")" -delete 2>/dev/null  # 옛 마커 정리
+    echo ""
+    echo "[WEEKLY RETRO — 금요일 첫 실행]"
+    echo "→ 사용자에게 물어볼 것: \"오늘 금요일입니다. 주간 리트로(/weekly-retro)를 지금 돌릴까요?\""
+    echo "  사용자가 예라고 하면 /weekly-retro 를 실행. 아니라고 하면 넘어갈 것 (오늘은 다시 묻지 않음)."
+  fi
+fi
 WRS_SH
 chmod +x "$HOOK_SH"
 
